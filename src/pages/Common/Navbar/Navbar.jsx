@@ -10,10 +10,10 @@ const Navbar = () => {
 
 
     const navItems = [
-        { name: 'Dashboard', icon: Home, href: '#dashboard' },
-        { name: 'Budget', icon: PiggyBank, href: '#budget' },
-        { name: 'Expenses', icon: ReceiptText, href: '#expenses' },
-        { name: 'Reports', icon: BarChart2, href: '#reports' },
+        { name: 'Dashboard', icon: Home, href: '/dashboard' },
+        { name: 'Budget', icon: PiggyBank, href: '/budget' },
+        { name: 'Expenses', icon: ReceiptText, href: '/expenses' },
+        { name: 'Reports', icon: BarChart2, href: '/reports' },
     ];
 
     return (

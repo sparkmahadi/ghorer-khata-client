@@ -4,8 +4,8 @@ import React from 'react';
 import HomePage from '../pages/Homepage/Homepage';
 import RegisterPage from '../pages/Register/Register';
 import LoginPage from '../pages/Login/Login';
-import ErrorPage from '../components/ErrorPage';
-import Dashboard from '../pages/Dashboard/Dashboard';
+import DashboardPage from '../pages/DashboardPage/DashboardPage';
+import Categories from '../pages/Categories/Categories';
 
 const router = createBrowserRouter([
   {
@@ -15,7 +15,8 @@ const router = createBrowserRouter([
       { path: '/', element: <HomePage /> },
       { path: '/register', element: <RegisterPage /> },
       { path: '/login', element: <LoginPage /> },
-      { path: '/dashboard', element: <Dashboard /> },
+      { path: '/categories', element: <Categories /> },
+      { path: '/dashboard', element: <DashboardPage /> },
     //   { path: 'about', element: <About /> },
     ],
     // errorElement: <ErrorPage />,
