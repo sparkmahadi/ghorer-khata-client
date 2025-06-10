@@ -11,7 +11,9 @@ const Navbar = () => {
 
     const navItems = [
         { name: 'Dashboard', icon: Home, href: '/dashboard' },
-        { name: 'Budget', icon: PiggyBank, href: '/budget' },
+        { name: 'Products', icon: Home, href: '/products' },
+        { name: 'Categories', icon: Home, href: '/categories' },
+        { name: 'Budgets', icon: PiggyBank, href: '/budgets' },
         { name: 'Expenses', icon: ReceiptText, href: '/expenses' },
         { name: 'Reports', icon: BarChart2, href: '/reports' },
     ];

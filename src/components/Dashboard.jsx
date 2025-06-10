@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { ShoppingCart, Heart, PackageCheck, Eye, PersonStanding, UtilityPole, PenToolIcon, RecycleIcon } from "lucide-react";
+import { ShoppingCart, Heart, PackageCheck, Eye, PersonStanding, UtilityPole, PenToolIcon, RecycleIcon, StoreIcon } from "lucide-react";
 import { toast } from "react-toastify";
 import { useAuth } from "../contexts/AuthContext";
 import { Link, useNavigate } from "react-router";
@@ -8,7 +8,7 @@ import { Link, useNavigate } from "react-router";
 const Dashboard = ({
     categories,
     users,
-    //   initialSamples,
+    products,
     //   initialTakenSamples,
     //   initialDeletedSamples,
 }) => {
@@ -47,6 +47,12 @@ const Dashboard = ({
             icon: <PersonStanding className="h-6 w-6 text-purple-500" />,
             link: '/dashboard/users',
             value: users?.length,
+        },
+        {
+            title: "Total Products",
+            icon: <StoreIcon className="h-6 w-6 text-purple-500" />,
+            link: '/dashboard/products-list',
+            value: products?.length,
         },
         {
             title: "Utilities",
