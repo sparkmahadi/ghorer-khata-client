@@ -1,6 +1,7 @@
 import axios from 'axios';
+import { toast } from 'react-toastify';
 
-const API_BASE_URL = 'http://localhost:5000/api'; // Your backend URL
+const API_BASE_URL = `${import.meta.env.VITE_API_BASE_URL}/api`; // Your backend URL
 
 // Helper function to handle common API response structure
 const handleApiResponse = (response) => {
@@ -52,9 +53,9 @@ export const deleteBudget = async (id) => {
     }
 };
 
-export const fetchTransactions = async (params = {}) => {
+export const fetchTransactions = async (budgetId) => {
     try {
-        const response = await axios.get(`${API_BASE_URL}/transactions`, { params });
+        const response = await axios.get(`${API_BASE_URL}/transactions/${budgetId}`);
         return handleApiResponse(response);
     } catch (error) {
         console.error('Error in fetchTransactions:', error.response?.data?.message || error.message);
@@ -62,12 +63,13 @@ export const fetchTransactions = async (params = {}) => {
     }
 };
 
-export const createTransaction = async (transactionData) => {
+export const createTransaction = async (transactionData, budgetId) => {
     try {
-        const response = await axios.post(`${API_BASE_URL}/transactions`, transactionData);
+        const response = await axios.post(`${API_BASE_URL}/transactions/${budgetId}`, transactionData);
         return handleApiResponse(response);
     } catch (error) {
         console.error('Error in createTransaction:', error.response?.data?.message || error.message);
+        toast.error(error.response?.data?.message || error.message);
         throw new Error(error.response?.data?.message || 'Failed to create transaction');
     }
 };

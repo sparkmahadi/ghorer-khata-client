@@ -11,8 +11,10 @@ import ProductList from '../pages/ProductList/ProductList';
 import Products from '../pages/Products/Products';
 import ProductDetail from '../pages/Products/ProductDetail';
 import Budget from '../pages/Budget/Budget';
-import BudgetMiniDetail from '../pages/Budget/BudgetMiniDetail';
-import BudgetDetails from '../pages/Budget/BudgetDetails';
+import BudgetDetails from '../pages/Budget/BudgetDetails/BudgetDetails';
+import AddTransactionForm from '../pages/Expense/AddTransactionForm';
+import Transaction from '../pages/Expense/Transaction';
+import TransactionList from '../pages/Expense/TransactionList';
 
 const router = createBrowserRouter([
   {
@@ -28,8 +30,11 @@ const router = createBrowserRouter([
       { path: '/categories/:id', element: <CategoryDetail /> },
       { path: '/dashboard', element: <DashboardPage /> },
       { path: '/dashboard/products-list', element: <ProductList /> },
-      { path: '//budgets', element: <Budget /> },
-      { path: '//budgets/:budgetId', element: <BudgetDetails /> },
+      { path: '/budgets', element: <Budget /> },
+      { path: '/expenses', element: <Transaction /> },
+      { path: '/budget/expenses/:budgetId', element: <TransactionList /> },
+      { path: '/budget/expenses/:budgetId/add-transaction', element: <AddTransactionForm /> },
+      { path: '/budgets/:budgetId', element: <BudgetDetails /> },
       //   { path: 'about', element: <About /> },
     ],
     // errorElement: <ErrorPage />,

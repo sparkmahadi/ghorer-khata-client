@@ -34,15 +34,6 @@ function AddBudgetForm({ onBudgetCreated, onCancel }) {
                     startDate: new Date(startDate).toISOString(),
                     endDate: new Date(endDate).toISOString()
                 },
-                categories: [
-                    // Example initial categories - you might want a separate form for this
-                    { id: 'cat_groceries', name: 'Groceries & Essentials', allocatedAmount: 500, utilizedAmount: 0, subcategories: [
-                        { id: 'sub_rice_lentils', name: 'Rice, Lentils, Oil, Salt, Spices', allocatedAmount: 200, utilizedAmount: 0 },
-                        { id: 'sub_vegetables_fruits', name: 'Vegetables & Fruits', allocatedAmount: 300, utilizedAmount: 0 }
-                    ]},
-                    { id: 'cat_transport', name: 'Transportation', allocatedAmount: 100, utilizedAmount: 0, subcategories: [] },
-                    { id: 'cat_entertainment', name: 'Entertainment', allocatedAmount: 50, utilizedAmount: 0, subcategories: [] }
-                ]
             };
             await createBudget(newBudgetData);
             alert('Budget created successfully!');
