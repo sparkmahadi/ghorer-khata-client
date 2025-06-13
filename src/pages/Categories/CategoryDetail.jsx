@@ -22,7 +22,6 @@ function CategoryDetail() {
     // State for Add New Subcategory Form
     const [showAddSubcategoryForm, setShowAddSubcategoryForm] = useState(false);
     const [newSubcategoryData, setNewSubcategoryData] = useState({
-        id: '',
         name: '',
         icon: 'question',
         color: '#CCCCCC',
@@ -100,7 +99,7 @@ function CategoryDetail() {
             toast.success('Subcategory added successfully!');
             await fetchCategoryDetails(categoryId); // Re-fetch to update state
             setShowAddSubcategoryForm(false); // Hide the form on success
-            setNewSubcategoryData({ id: '', name: '', icon: 'question', color: '#CCCCCC', monthly_limit: 0 }); // Reset form
+            setNewSubcategoryData({ name: '', icon: 'question', color: '#CCCCCC', monthly_limit: 0 }); // Reset form
             return { success: true };
         } catch (error) {
             console.error("Failed to add subcategory:", error);
@@ -209,7 +208,7 @@ function CategoryDetail() {
     // --- Handlers for Add New Subcategory Form ---
     const handleAddSubcategoryClick = () => {
         setShowAddSubcategoryForm(true);
-        setNewSubcategoryData({ id: '', name: '', icon: 'question', color: '#CCCCCC', monthly_limit: 0 }); // Reset form
+        setNewSubcategoryData({ name: '', icon: 'question', color: '#CCCCCC', monthly_limit: 0 }); // Reset form
     };
 
     const handleNewSubcategoryChange = (e) => {
@@ -222,7 +221,7 @@ function CategoryDetail() {
 
     const handleNewSubcategorySubmit = async (e) => {
         e.preventDefault();
-        if (!newSubcategoryData.id || !newSubcategoryData.name) {
+        if (!newSubcategoryData.name) {
             toast.error("Subcategory ID and Name cannot be empty.");
             return;
         }
@@ -349,19 +348,6 @@ function CategoryDetail() {
                     ) : (
                         <form onSubmit={handleNewSubcategorySubmit} className="space-y-4 p-4 border border-gray-200 rounded-xl bg-gray-50">
                             <h3 className="text-xl font-semibold mb-2">New Subcategory Details</h3>
-                            <div>
-                                <label htmlFor="newSubcategoryId" className="block text-sm font-medium text-gray-700">ID (Unique)</label>
-                                <input
-                                    type="text"
-                                    id="newSubcategoryId"
-                                    name="id"
-                                    value={newSubcategoryData.id}
-                                    onChange={handleNewSubcategoryChange}
-                                    className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                                    required
-                                    disabled={apiInProgress}
-                                />
-                            </div>
                             <div>
                                 <label htmlFor="newSubcategoryName" className="block text-sm font-medium text-gray-700">Name</label>
                                 <input

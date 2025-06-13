@@ -80,7 +80,7 @@ function Categories() {
 
   const handleNewCategorySubmit = async (e) => {
     e.preventDefault();
-    if (!newCategoryData.id || !newCategoryData.name) {
+    if (!newCategoryData.name) {
       setErrorMessage("Category ID and Name cannot be empty.");
       return;
     }
@@ -135,7 +135,7 @@ function Categories() {
 
   return (
     <div className="min-h-screen bg-gray-100 p-4 font-sans flex items-center justify-center">
-      <div className="bg-white p-6 rounded-2xl shadow-lg w-full max-w-2xl">
+      <div className="bg-white p-6 rounded-2xl shadow-lg w-full max-w-4xl">
         {errorMessage && (
           <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-xl relative mb-4" role="alert">
             <strong className="font-bold">Error!</strong>
@@ -158,19 +158,6 @@ function Categories() {
           ) : (
             <form onSubmit={handleNewCategorySubmit} className="space-y-4 p-4 border border-gray-200 rounded-xl bg-gray-50">
               <h3 className="text-xl font-semibold mb-2">New Category Details</h3>
-              <div>
-                <label htmlFor="newCategoryId" className="block text-sm font-medium text-gray-700">ID (Unique, e.g., 'electronics')</label>
-                <input
-                  type="text"
-                  id="newCategoryId"
-                  name="id"
-                  value={newCategoryData.id}
-                  onChange={handleNewCategoryChange}
-                  className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                  required
-                  disabled={apiInProgress}
-                />
-              </div>
               <div>
                 <label htmlFor="newCategoryName" className="block text-sm font-medium text-gray-700">Name</label>
                 <input
@@ -233,9 +220,9 @@ function Categories() {
         </div>
 
         {/* List of Categories */}
-        <div className="space-y-4">
-          {allCategories.length > 0 ? (
-            allCategories.map(cat => (
+        <div className="space-y-4 grid lg:grid-cols-2 lg:gap-10">
+          {allCategories?.length > 0 ? (
+            allCategories?.map(cat => (
               <>
                 <Link
                   key={cat.id}
@@ -251,14 +238,15 @@ function Categories() {
                   >
                     View Details
                   </button>
-                </Link>
-                <button
+                   <button
                   onClick={() => handleDeleteMainCategory(cat.id)}
                   className="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-3 rounded-xl shadow-md transition duration-300 ease-in-out text-sm"
                   disabled={apiInProgress}
                 >
                   Delete
                 </button>
+                </Link>
+               
               </>
             ))
           ) : (
