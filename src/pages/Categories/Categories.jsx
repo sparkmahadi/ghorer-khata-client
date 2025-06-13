@@ -236,7 +236,7 @@ function Categories() {
                   <button
                     className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-xl shadow-md transition duration-300 ease-in-out text-sm"
                   >
-                    View Details
+                    Details
                   </button>
                    <button
                   onClick={() => handleDeleteMainCategory(cat.id)}
