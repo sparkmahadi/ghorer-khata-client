@@ -15,6 +15,7 @@ const Navbar = () => {
         { name: 'Categories', icon: Home, href: '/categories' },
         { name: 'Budgets', icon: PiggyBank, href: '/budgets' },
         { name: 'Expenses', icon: ReceiptText, href: '/expenses' },
+        { name: 'Consumptions', icon: BarChart2, href: '/consumption-plans' },
         { name: 'Reports', icon: BarChart2, href: '/reports' },
     ];
 

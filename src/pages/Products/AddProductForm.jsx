@@ -6,10 +6,8 @@ const AddProductForm = ({ apiInProgress, fetchProducts, setApiInProgress, getFil
     // State for Add New Product Form
     const [showAddProductForm, setShowAddProductForm] = useState(false);
     const [newProductData, setNewProductData] = useState({
-        id: '',
         item_name: '',
         unit: '',
-        quantity: 0,
         price: 0,
         date: new Date().toISOString().slice(0, 10), // Default to current date
         category_id: '',
@@ -21,7 +19,7 @@ const AddProductForm = ({ apiInProgress, fetchProducts, setApiInProgress, getFil
     const handleAddProductClick = () => {
         setShowAddProductForm(true);
         setNewProductData({
-            id: '', item_name: '', unit: '', quantity: 0, price: 0,
+            item_name: '', unit: '', price: 0,
             date: new Date().toISOString().slice(0, 10), category_id: '', subcategory_id: '', notes: ''
         });
     };
@@ -36,7 +34,7 @@ const AddProductForm = ({ apiInProgress, fetchProducts, setApiInProgress, getFil
 
     const handleNewProductSubmit = async (e) => {
         e.preventDefault();
-        if (!newProductData.id || !newProductData.item_name || !newProductData.unit ||
+        if (!newProductData.item_name || !newProductData.unit ||
             newProductData.quantity < 0 || newProductData.price < 0 || !newProductData.date ||
             !newProductData.category_id || !newProductData.subcategory_id) {
             toast.error("Please fill all required fields and ensure quantity/price are valid numbers.");
@@ -85,19 +83,6 @@ const AddProductForm = ({ apiInProgress, fetchProducts, setApiInProgress, getFil
                     <h3 className="text-xl font-semibold mb-2">New Product Details</h3>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
-                            <label htmlFor="newProductId" className="block text-sm font-medium text-gray-700">ID (Unique)</label>
-                            <input
-                                type="text"
-                                id="newProductId"
-                                name="id"
-                                value={newProductData.id}
-                                onChange={handleNewProductChange}
-                                className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm"
-                                required
-                                disabled={apiInProgress}
-                            />
-                        </div>
-                        <div>
                             <label htmlFor="newItemName" className="block text-sm font-medium text-gray-700">Item Name</label>
                             <input
                                 type="text"
@@ -123,20 +108,6 @@ const AddProductForm = ({ apiInProgress, fetchProducts, setApiInProgress, getFil
                                 className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm"
                                 placeholder="e.g., kg, pcs, liter"
                                 required
-                                disabled={apiInProgress}
-                            />
-                        </div>
-                        <div>
-                            <label htmlFor="newQuantity" className="block text-sm font-medium text-gray-700">Quantity</label>
-                            <input
-                                type="number"
-                                id="newQuantity"
-                                name="quantity"
-                                value={newProductData.quantity}
-                                onChange={handleNewProductChange}
-                                className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm"
-                                required
-                                min="0"
                                 disabled={apiInProgress}
                             />
                         </div>

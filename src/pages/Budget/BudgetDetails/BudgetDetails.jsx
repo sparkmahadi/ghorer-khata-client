@@ -2,18 +2,12 @@ import axios from 'axios';
 import React, { useEffect, useRef, useState } from 'react';
 import { useParams, useNavigate } from 'react-router';
 import IncludeProductModal from './Components/IncludeProductModal';
-import { toast } from 'react-toastify';
 import BasicBudgetForm from './Components/BasicBudgetForm';
 import FinancialSummary from './Components/FinancialSummary';
 import BasicBudgetInfo from './Components/BasicBudgetInfo';
 import AddProductForm from '../../Products/AddProductForm';
+import { useProductsAndCategories } from '../../../contexts/ProductAndCategoryContext';
 
-/**
- * Handles common API response structure for success/error.
- * @param {Object} response - The Axios response object.
- * @returns {Object} - The 'data' payload if successful.
- * @throws {Error} - If the backend indicates an error or a network error occurs.
- */
 const handleApiResponse = (response) => {
     if (response.data.success) {
         return response.data.data;
@@ -21,8 +15,6 @@ const handleApiResponse = (response) => {
         throw new Error(response.data.message || 'An unknown error occurred');
     }
 };
-
-// --- API Functions for Budget and Product Allocations ---
 
 const deleteBudget = async (id) => {
     try {
@@ -34,7 +26,6 @@ const deleteBudget = async (id) => {
     }
 };
 
-// New API functions for budget items
 const addBudgetItem = async (budgetId, itemData) => {
     try {
         const response = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/budgets/${budgetId}/items`, itemData);
@@ -80,6 +71,7 @@ const searchMasterProducts = async (searchTerm) => {
 
 function BudgetDetails() {
     const { budgetId } = useParams();
+    const {products, loadingProducts, categories, fetchProducts } = useProductsAndCategories();
     const navigate = useNavigate();
 
     const [budget, setBudget] = useState(null);
@@ -106,40 +98,8 @@ function BudgetDetails() {
 
     const [editingBudgetItem, setEditingBudgetItem] = useState(null); // The budget item being edited
 
-    const [loadingProducts, setLoadingProducts] = useState(false);
-    const [products, setProducts] = useState([]);
-    const [categories, setCategories] = useState([]);
       const [apiInProgress, setApiInProgress] = useState(false);
 
-    const fetchProducts = async () => {
-        setLoadingProducts(true);
-        try {
-            const response = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/products`);
-            setProducts(response?.data?.data || []);
-            toast.success('Products loaded successfully!');
-        } catch (error) {
-            console.error('Failed to fetch products:', error);
-            toast.error(error.response?.data?.message || 'Failed to load products. Please try again.');
-            setProducts([]);
-        } finally {
-            setLoadingProducts(false);
-        }
-    };
-
-    const fetchCategories = async () => {
-        try {
-            const response = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/utilities/categories`);
-            setCategories(response?.data?.data || []);
-        } catch (error) {
-            console.error('Failed to fetch categories for dropdowns:', error);
-            toast.error('Failed to load categories for forms. Please check your backend.');
-        }
-    };
-
-    useEffect(() => {
-        fetchProducts();
-        fetchCategories();
-    }, []);
 
     // --- Data Fetching ---
     const fetchBudgetById = async (id) => {

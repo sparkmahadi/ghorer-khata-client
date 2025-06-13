@@ -1,7 +1,7 @@
 import React, { useState, } from 'react';
 import { useNavigate } from 'react-router';
 
-function SelectProductForExpense({ categories, products, getFilteredSubcategories, setItemName, setProductId, setSelectedSubcategoryId, setSelectedCategoryId, budgetId, onProductSelected }) {
+function SelectProductForCon({ products, setProductId, setUnit, setNotes, setItem_name }) {
     const navigate = useNavigate();
     const [loading, setLoading] = useState(false);
     const [apiInProgress, setApiInProgress] = useState(false);
@@ -10,19 +10,14 @@ function SelectProductForExpense({ categories, products, getFilteredSubcategorie
     const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
 
     const handleSelectToTransact = (pd) => {
-        setItemName(pd.item_name);
         setProductId(pd.id);
-        setSelectedCategoryId(pd.category_id);
-        setSelectedSubcategoryId(pd.subcategory_id);
-        if (onProductSelected) {
-            onProductSelected(pd);
-        }
+        setUnit(pd.unit);
+        setNotes(pd.notes);
+        setItem_name(pd.item_name);
     };
 
     const filteredProducts = products.filter(product =>
-        product.item_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (categories.find(c => c.id === product.category_id)?.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
-        (getFilteredSubcategories(product.category_id).find(s => s.id === product.subcategory_id)?.name.toLowerCase().includes(searchTerm.toLowerCase()))
+        product.item_name.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
     if (loading) {
@@ -81,12 +76,6 @@ function SelectProductForExpense({ categories, products, getFilteredSubcategorie
                             {filteredProducts.map(product => (
                                 <tr key={product.id} className="hover:bg-gray-50 transition duration-150 ease-in-out">
                                     <td className="py-3.5 px-5 font-medium text-gray-900">{product.item_name}</td>
-                                    <td className="py-3.5 px-5 text-gray-700">
-                                        <span className="block">{categories.find(c => c.id === product.category_id)?.name || 'N/A'}</span>
-                                        <span className="text-xs text-gray-500">
-                                            ({getFilteredSubcategories(product.category_id).find(s => s.id === product.subcategory_id)?.name || 'N/A'})
-                                        </span>
-                                    </td>
                                     <td className="py-3.5 px-5 text-gray-700">{product.quantity} {product.unit || ''}</td>
                                     <td className="py-3.5 px-5 text-gray-700">${product.price?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                                     <td className="py-3.5 px-5 flex flex-wrap gap-2">
@@ -122,4 +111,4 @@ function SelectProductForExpense({ categories, products, getFilteredSubcategorie
     );
 }
 
-export default SelectProductForExpense;
+export default SelectProductForCon;

@@ -17,13 +17,10 @@ const ProductCard = ({ product, categories, getFilteredSubcategories }) => {
                     <span className="font-semibold">Subcategory:</span> {getFilteredSubcategories(product.category_id).find(s => s.id === product.subcategory_id)?.name || product.subcategory_id}
                 </p>
                 <p className="text-gray-700 text-sm mb-1">
-                    <span className="font-semibold">Quantity:</span> {product.quantity} {product.unit}
+                    <span className="font-semibold">Unit:</span> {product.unit}
                 </p>
                 <p className="text-gray-700 text-sm mb-1">
                     <span className="font-semibold">Price/Unit:</span> ${product.price?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                </p>
-                <p className="text-gray-700 text-sm mb-3">
-                    <span className="font-semibold">Total Cost:</span> <span className="text-green-700 font-bold">${product.total?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                 </p>
                 <p className="text-gray-700 text-sm mb-3">
                     <span className="font-semibold">Date:</span> {product.date}
