@@ -1,6 +1,6 @@
-import { createBrowserRouter, Navigate } from 'react-router';
-import MainLayout from '../layouts/Main';
 import React from 'react';
+import { createBrowserRouter } from 'react-router';
+import MainLayout from '../layouts/Main';
 import HomePage from '../pages/Homepage/Homepage';
 import RegisterPage from '../pages/Register/Register';
 import LoginPage from '../pages/Login/Login';
@@ -43,57 +43,6 @@ const router = createBrowserRouter([
     ],
     // errorElement: <ErrorPage />,
   },
-
-  // {
-  //   path: "/",
-  //   element: <BudgetLayout />, // Your main layout providing totalBudget, categories, editing states etc. via OutletContext
-  //   children: [
-  //     {
-  //       index: true, 
-  //       element: <BudgetDashboard />, // Or desired landing page
-  //     },
-  //     {
-  //       path: "dashboard",
-  //       element: <BudgetDashboard />,
-  //     },
-  //     {
-  //       path: "allocation-hub",
-  //       element: <AllocationHub />, // AllocationHub acts as a layout for its children
-  //       children: [
-  //         {
-  //           index: true, // Default route for /allocation-hub (renders EditCategory by default)
-  //           element: <EditCategory />,
-  //         },
-  //         {
-  //           path: "category", // /allocation-hub/category
-  //           element: <EditCategory />,
-  //         },
-  //         {
-  //           path: "subcategory", // /allocation-hub/subcategory
-  //           element: <EditSubcategory />,
-  //         },
-  //         {
-  //           path: "item", // /allocation-hub/item
-  //           element: <EditItem />,
-  //         },
-  //       ],
-  //     },
-  //     // IMPORTANT: Removed routes for creating new entities
-  //     // {
-  //     //   path: "create-category",
-  //     //   element: <CreateCategory />,
-  //     // },
-  //     // {
-  //     //   path: "create-subcategory/:parentId",
-  //     //   element: <CreateSubcategory />,
-  //     // },
-  //     // {
-  //     //   path: "create-item/:categoryId/:subcategoryId",
-  //     //   element: <CreateItem />,
-  //     // },
-  //     // ... other routes
-  //   ],
-  // },
 ]);
 
 export default router;
