@@ -1,7 +1,7 @@
 import React from 'react';
 import { createBrowserRouter } from 'react-router';
 import MainLayout from '../layouts/Main';
-import HomePage from '../pages/Homepage/Homepage';
+import HomePage from '../pages/Homepage/HomePage.jsx';
 import RegisterPage from '../pages/Register/Register';
 import LoginPage from '../pages/Login/Login';
 import DashboardPage from '../pages/DashboardPage/DashboardPage';
