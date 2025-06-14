@@ -1,7 +1,6 @@
 import React from 'react';
 import { createBrowserRouter } from 'react-router';
 import MainLayout from '../layouts/Main';
-import HomePage from '../pages/Homepage/HomePage';
 import RegisterPage from '../pages/Register/Register';
 import LoginPage from '../pages/Login/Login';
 import DashboardPage from '../pages/DashboardPage/DashboardPage';
@@ -17,6 +16,7 @@ import Transaction from '../pages/Expense/Transaction';
 import TransactionList from '../pages/Expense/TransactionList';
 import ConsumptionPlan from '../pages/ConsumptionPlan/ConsumptionPlan';
 import AddConsumptionPlan from '../pages/ConsumptionPlan/AddConsumptionPlan';
+import HomePage from './../pages/HomePage/HomePage';
 
 const router = createBrowserRouter([
   {
