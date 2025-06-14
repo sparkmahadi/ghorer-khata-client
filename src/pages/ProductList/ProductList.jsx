@@ -2,6 +2,7 @@ import axios from 'axios';
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router';
 import { toast } from 'react-toastify';
+import AddProductForm from '../Products/AddProductForm';
 
 function ProductList() {
   const navigate = useNavigate();
@@ -151,8 +152,8 @@ function ProductList() {
   const handleNewProductSubmit = async (e) => {
     e.preventDefault();
     if (!newProductData.id || !newProductData.item_name || !newProductData.unit ||
-        newProductData.quantity < 0 || newProductData.price < 0 || !newProductData.date ||
-        !newProductData.category_id || !newProductData.subcategory_id) {
+      newProductData.quantity < 0 || newProductData.price < 0 || !newProductData.date ||
+      !newProductData.category_id || !newProductData.subcategory_id) {
       toast.error("Please fill all required fields and ensure quantity/price are valid numbers.");
       return;
     }
@@ -183,7 +184,7 @@ function ProductList() {
 
   const handleDeleteProduct = async (productId) => {
     if (window.confirm("Are you sure you want to delete this product?")) { // Using confirm for quick demo
-        await deleteProduct(productId);
+      await deleteProduct(productId);
     }
   };
 
@@ -227,170 +228,13 @@ function ProductList() {
 
         {/* Add New Product Button / Form */}
         <div className="mb-6 border-b pb-4">
-          {!showAddProductForm ? (
-            <button
-              onClick={handleAddProductClick}
-              className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-xl shadow-md transition duration-300 ease-in-out w-full"
-              disabled={apiInProgress}
-            >
-              Add New Product
-            </button>
-          ) : (
-            <form onSubmit={handleNewProductSubmit} className="space-y-4 p-4 border border-gray-200 rounded-xl bg-gray-50">
-              <h3 className="text-xl font-semibold mb-2">New Product Details</h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label htmlFor="newProductId" className="block text-sm font-medium text-gray-700">ID (Unique)</label>
-                  <input
-                    type="text"
-                    id="newProductId"
-                    name="id"
-                    value={newProductData.id}
-                    onChange={handleNewProductChange}
-                    className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm"
-                    required
-                    disabled={apiInProgress}
-                  />
-                </div>
-                <div>
-                  <label htmlFor="newItemName" className="block text-sm font-medium text-gray-700">Item Name</label>
-                  <input
-                    type="text"
-                    id="newItemName"
-                    name="item_name"
-                    value={newProductData.item_name}
-                    onChange={handleNewProductChange}
-                    className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm"
-                    required
-                    disabled={apiInProgress}
-                  />
-                </div>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div>
-                  <label htmlFor="newUnit" className="block text-sm font-medium text-gray-700">Unit</label>
-                  <input
-                    type="text"
-                    id="newUnit"
-                    name="unit"
-                    value={newProductData.unit}
-                    onChange={handleNewProductChange}
-                    className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm"
-                    placeholder="e.g., kg, pcs, liter"
-                    required
-                    disabled={apiInProgress}
-                  />
-                </div>
-                <div>
-                  <label htmlFor="newQuantity" className="block text-sm font-medium text-gray-700">Quantity</label>
-                  <input
-                    type="number"
-                    id="newQuantity"
-                    name="quantity"
-                    value={newProductData.quantity}
-                    onChange={handleNewProductChange}
-                    className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm"
-                    required
-                    min="0"
-                    disabled={apiInProgress}
-                  />
-                </div>
-                <div>
-                  <label htmlFor="newPrice" className="block text-sm font-medium text-gray-700">Price per Unit ($)</label>
-                  <input
-                    type="number"
-                    id="newPrice"
-                    name="price"
-                    value={newProductData.price}
-                    onChange={handleNewProductChange}
-                    className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm"
-                    required
-                    min="0"
-                    step="0.01"
-                    disabled={apiInProgress}
-                  />
-                </div>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div>
-                  <label htmlFor="newDate" className="block text-sm font-medium text-gray-700">Date</label>
-                  <input
-                    type="date"
-                    id="newDate"
-                    name="date"
-                    value={newProductData.date}
-                    onChange={handleNewProductChange}
-                    className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm"
-                    required
-                    disabled={apiInProgress}
-                  />
-                </div>
-                <div>
-                  <label htmlFor="newCategoryId" className="block text-sm font-medium text-gray-700">Category</label>
-                  <select
-                    id="newCategoryId"
-                    name="category_id"
-                    value={newProductData.category_id}
-                    onChange={handleNewProductChange}
-                    className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm"
-                    required
-                    disabled={apiInProgress}
-                  >
-                    <option value="">Select Category</option>
-                    {categories.map(cat => (
-                      <option key={cat.id} value={cat.id}>{cat.name}</option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label htmlFor="newSubcategoryId" className="block text-sm font-medium text-gray-700">Subcategory</label>
-                  <select
-                    id="newSubcategoryId"
-                    name="subcategory_id"
-                    value={newProductData.subcategory_id}
-                    onChange={handleNewProductChange}
-                    className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm"
-                    required
-                    disabled={apiInProgress || !newProductData.category_id}
-                  >
-                    <option value="">Select Subcategory</option>
-                    {getFilteredSubcategories(newProductData.category_id).map(sub => (
-                      <option key={sub.id} value={sub.id}>{sub.name}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-              <div>
-                <label htmlFor="newNotes" className="block text-sm font-medium text-gray-700">Notes</label>
-                <textarea
-                  id="newNotes"
-                  name="notes"
-                  value={newProductData.notes}
-                  onChange={handleNewProductChange}
-                  rows="2"
-                  className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm"
-                  disabled={apiInProgress}
-                ></textarea>
-              </div>
-              <div className="flex justify-end gap-3">
-                <button
-                  type="submit"
-                  className="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-xl shadow-md transition duration-300 ease-in-out"
-                  disabled={apiInProgress}
-                >
-                  {apiInProgress ? 'Adding...' : 'Create Product'}
-                </button>
-                <button
-                  type="button"
-                  onClick={handleCancelAddProduct}
-                  className="bg-gray-400 hover:bg-gray-500 text-white font-bold py-2 px-4 rounded-xl shadow-md transition duration-300 ease-in-out"
-                  disabled={apiInProgress}
-                >
-                  Cancel
-                </button>
-              </div>
-            </form>
-          )}
+          <AddProductForm
+            apiInProgress={apiInProgress}
+            fetchProducts={fetchProducts}
+            setApiInProgress={setApiInProgress}
+            getFilteredSubcategories={getFilteredSubcategories}
+            categories={categories}
+          />
         </div>
 
         {/* Product List */}
@@ -404,8 +248,6 @@ function ProductList() {
                   <th className="py-3 px-4 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">Item Name</th>
                   <th className="py-3 px-4 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">Category</th>
                   <th className="py-3 px-4 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">Qty ({products[0]?.unit || 'Unit'})</th>
-                  <th className="py-3 px-4 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">Price</th>
-                  <th className="py-3 px-4 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">Total</th>
                   <th className="py-3 px-4 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">Date</th>
                   <th className="py-3 px-4 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">Actions</th>
                 </tr>
@@ -517,8 +359,6 @@ function ProductList() {
                           </span>
                         </td>
                         <td className="py-3 px-4 text-gray-700">{product.quantity} {product.unit}</td>
-                        <td className="py-3 px-4 text-gray-700">${product.price?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                        <td className="py-3 px-4 font-semibold text-gray-800">${product.total?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                         <td className="py-3 px-4 text-gray-700">{product.date}</td>
                         <td className="py-3 px-4 flex gap-2">
                           <button

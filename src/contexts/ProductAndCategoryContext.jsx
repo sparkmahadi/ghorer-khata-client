@@ -22,7 +22,7 @@ export const ProductAndCategoryProvider = ({ children }) => {
         try {
             const response = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/products`);
             setProducts(response?.data?.data || []);
-            toast.success('Products loaded successfully!');
+            // toast.success('Products loaded successfully!');
         } catch (err) {
             console.error('Failed to fetch products:', err);
             const errorMessage = err.response?.data?.message || 'Failed to load products. Please try again.';
@@ -41,8 +41,6 @@ export const ProductAndCategoryProvider = ({ children }) => {
         try {
             const response = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/utilities/categories`);
             setCategories(response?.data?.data || []);
-            // No success toast here to avoid too many notifications on initial load,
-            // but you could add one if desired.
         } catch (err) {
             console.error('Failed to fetch categories for dropdowns:', err);
             const errorMessage = err.response?.data?.message || 'Failed to load categories for forms. Please check your backend.';

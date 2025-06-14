@@ -49,11 +49,12 @@ function Budget() {
     };
 
     const [budgets, setBudgets] = useState([]);
-    const [loading, setLoading] = useState(true); // Separate loading state for budgets
+    const [loading, setLoading] = useState(false); // Separate loading state for budgets
     const [error, setError] = useState(null);
 
     const fetchBudgetsByUserId = async (userId) => {
         console.log('fetchBudgetByuserId');
+        setLoading(true);
         try {
             const response = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/budgets/user/${userId}`);
             console.log(response);

@@ -39,28 +39,31 @@ const Navbar = () => {
 
                 {/* Desktop Navigation Links */}
                 <div className="hidden md:flex items-center space-x-6">
-                    {navItems?.map((item) => (
-                        <Link
-                            key={item?.name}
-                            to={item?.href}
-                            className="flex items-center space-x-2 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition duration-300 shadow-md transform hover:scale-105"
-                        >
-                            {/* <item?.icon size={20} /> */}
-                            <span className="font-medium">{item?.name}</span>
-                        </Link>
-                    ))}
+                    {navItems?.map((item) => {
+                        // Dynamically render the icon component
+                        const IconComponent = item.icon;
+                        return (
+                            <Link
+                                key={item?.name}
+                                to={item?.href}
+                                className="flex items-center space-x-2 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition duration-300 shadow-md transform hover:scale-105"
+                            >
+                                <IconComponent size={20} /> {/* Render the icon here */}
+                                <span className="font-medium">{item?.name}</span>
+                            </Link>
+                        );
+                    })}
 
                     {
                         !isAuthenticated ? <Link
                             to={'/login'}
                             className="flex items-center space-x-2 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition duration-300 shadow-md transform hover:scale-105"
                         >
-                            {/* <item?.icon size={20} /> */}
                             <span className="font-medium">Login</span>
                         </Link>
                             :
                             <button
-                            onClick={logout}
+                                onClick={logout}
                                 className="flex items-center space-x-2 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition duration-300 shadow-md transform hover:scale-105"
                             >
                                 <span className="font-medium">Log Out</span>
@@ -71,7 +74,6 @@ const Navbar = () => {
                             to={'/register'}
                             className="flex items-center space-x-2 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition duration-300 shadow-md transform hover:scale-105"
                         >
-                            {/* <item?.icon size={20} /> */}
                             <span className="font-medium">Register</span>
                         </Link>
                     }
@@ -87,21 +89,48 @@ const Navbar = () => {
 
             {/* Mobile Navigation Links */}
             <div
-                className={`md:hidden mt-4 bg-blue-800 rounded-lg shadow-xl overflow-hidden transition-all duration-300 ease-in-out ${isMobileMenuOpen ? 'max-h-screen opacity-100' : 'max-h-0 opacity-0'
+                className={`md:hidden mt-4 bg-blue-800 rounded-lg shadow-xl overflow-hidden transition-all duration-300 ease-in-out ${isMobileMenuOpen ? 'opacity-100' : 'max-h-0 opacity-0'
                     }`}
             >
                 <div className="flex flex-col space-y-3 p-4">
-                    {navItems.map((item) => (
-                        <a
-                            key={item?.name}
-                            href={item?.href}
-                            onClick={() => setIsMobileMenuOpen(false)} // Close menu on link click
-                            className="flex items-center space-x-3 text-white px-4 py-3 rounded-md hover:bg-blue-700 transition duration-300 shadow-sm transform hover:translate-x-1"
+                    {navItems.map((item) => {
+                        // Dynamically render the icon component
+                        const IconComponent = item.icon;
+                        return (
+                            <Link
+                                key={item?.name}
+                                to={item?.href}
+                                onClick={() => setIsMobileMenuOpen(false)} // Close menu on link click
+                                className="flex items-center space-x-3 text-white px-4 py-3 rounded-md hover:bg-blue-700 transition duration-300 shadow-sm transform hover:translate-x-1"
+                            >
+                                <IconComponent size={20} /> {/* Render the icon here */}
+                                <span className="font-medium">{item?.name}</span>
+                            </Link>
+                        );
+                    })}
+                    {
+                        !isAuthenticated ? <Link
+                            to={'/login'}
+                            className="flex items-center space-x-2 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition duration-300 shadow-md transform hover:scale-105"
                         >
-                            {/* <item?.icon size={20} /> */}
-                            <span className="font-medium">{item?.name}</span>
-                        </a>
-                    ))}
+                            <span className="font-medium">Login</span>
+                        </Link>
+                            :
+                            <button
+                                onClick={logout}
+                                className="flex items-center space-x-2 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition duration-300 shadow-md transform hover:scale-105"
+                            >
+                                <span className="font-medium">Log Out</span>
+                            </button>
+                    }
+                    {
+                        !isAuthenticated && <Link
+                            to={'/register'}
+                            className="flex items-center space-x-2 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition duration-300 shadow-md transform hover:scale-105"
+                        >
+                            <span className="font-medium">Register</span>
+                        </Link>
+                    }
                     {isAuthenticated && (
                         <div className="flex items-center space-x-3 bg-blue-700 px-4 py-3 rounded-md shadow-inner mt-4">
                             <User size={20} />
