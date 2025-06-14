@@ -22,7 +22,7 @@ const MessageBox = ({ message, type, onClose }) => {
 };
 
 // Main Homepage Component
-const App = () => {
+const HomePage = () => {
   // Hardcoded data for demonstration
   const [totalMonthlyBudget, setTotalMonthlyBudget] = useState(25000); // Example total budget
   const [totalExpensesThisMonth, setTotalExpensesThisMonth] = useState(18500); // Example expenses
@@ -176,4 +176,4 @@ const App = () => {
   );
 };
 
-export default App;
+export default HomePage;

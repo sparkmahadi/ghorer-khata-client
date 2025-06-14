@@ -1,7 +1,7 @@
 import React from 'react';
 import { createBrowserRouter } from 'react-router';
 import MainLayout from '../layouts/Main';
-import HomePage from '../pages/Homepage/HomePage.jsx';
+import HomePage from '../pages/Homepage/HomePage';
 import RegisterPage from '../pages/Register/Register';
 import LoginPage from '../pages/Login/Login';
 import DashboardPage from '../pages/DashboardPage/DashboardPage';
@@ -23,7 +23,7 @@ const router = createBrowserRouter([
     path: '/',
     element: <MainLayout />,
     children: [
-      { path: '/', element: <HomePage /> },
+      { path: '/', element: <Homepage /> },
       { path: '/register', element: <RegisterPage /> },
       { path: '/login', element: <LoginPage /> },
       { path: '/categories', element: <Categories /> },
