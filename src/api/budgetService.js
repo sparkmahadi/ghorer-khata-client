@@ -104,3 +104,23 @@ export const fetchAllCategories = async () => {
         throw new Error(error.response?.data?.message || 'Failed to fetch all categories');
     }
 };
+
+export const updateBudgetFromTransactionAPI = async (budgetId, transactionDetails) => {
+  try {
+    const response = await axios.put(`${API_BASE_URL}/budgets/update-budget-from-transaction/${budgetId}`, transactionDetails);
+    return response.data;
+  } catch (error) {
+    console.error('Error updating budget from transaction API:', error.response?.data || error.message);
+    throw error; // Re-throw to be caught by the calling function
+  }
+};
+
+export const updateBudgetFromConsumption = async (budgetId, consumptionDetails) => {
+  try {
+    const response = await axios.put(`${API_BASE_URL}/budgets/update-budget-from-consumption/${budgetId}`, consumptionDetails);
+    return response.data;
+  } catch (error) {
+    console.error('Error updating budget from transaction API:', error.response?.data || error.message);
+    throw error; // Re-throw to be caught by the calling function
+  }
+};

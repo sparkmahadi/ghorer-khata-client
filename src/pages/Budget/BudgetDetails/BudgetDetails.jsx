@@ -8,6 +8,7 @@ import BasicBudgetInfo from './Components/BasicBudgetInfo';
 import AddProductForm from '../../Products/AddProductForm';
 import { useProductsAndCategories } from '../../../contexts/ProductAndCategoryContext';
 import { toast } from 'react-toastify';
+import AllocatedItem from './Components/AllocatedItem';
 
 const handleApiResponse = (response) => {
     if (response.data.success) {
@@ -559,34 +560,11 @@ function BudgetDetails() {
                         {budget?.budgetItems && budget?.budgetItems.length > 0 ? (
                             <ul className="space-y-3">
                                 {budget.budgetItems.map(item => (
-                                    <li key={item.budgetItemId} className="bg-white p-4 rounded-lg shadow border border-gray-100 flex flex-col sm:flex-row justify-between items-start sm:items-center transform transition-transform hover:scale-[1.01] duration-200">
-                                        <div className="mb-2 sm:mb-0">
-                                            <p className="text-lg font-bold text-gray-800">{item.item_name}</p>
-                                            <p className="text-sm text-gray-600">
-                                                Category: {item.category_id || 'N/A'}
-                                                {item.subcategory_id && ` > ${item.subcategory_id || 'N/A'}`}
-                                            </p>
-                                            <p className="text-sm text-gray-700 mt-1">
-                                                Allocated: <span className="font-bold text-green-700">${(item.allocated_amount || 0).toFixed(2)}</span>
-                                                {item.allocated_quantity && ` (${item.allocated_quantity} ${item.unit || ''} @ $${(item.price_per_unit || 0).toFixed(2)}/${item.unit || ''})`}
-                                            </p>
-                                            {item.notes && <p className="text-xs text-gray-500 italic">Notes: {item.notes}</p>}
-                                        </div>
-                                        <div className="flex space-x-2">
-                                            <button
-                                                onClick={() => handleEditProductClick(item)}
-                                                className="bg-yellow-500 hover:bg-yellow-600 text-white text-xs py-2 px-4 rounded-md transition duration-200 ease-in-out shadow-sm transform hover:scale-105"
-                                            >
-                                                Edit
-                                            </button>
-                                            <button
-                                                onClick={() => handleDeleteProduct(item.budgetItemId, item.item_name)}
-                                                className="bg-red-500 hover:bg-red-600 text-white text-xs py-2 px-4 rounded-md transition duration-200 ease-in-out shadow-sm transform hover:scale-105"
-                                            >
-                                                Remove
-                                            </button>
-                                        </div>
-                                    </li>
+                                    <AllocatedItem
+                                    item={item}
+                                    handleEditProductClick={handleEditProductClick}
+                                    handleDeleteProduct={handleDeleteProduct}
+                                    />
                                 ))}
                             </ul>
                         ) : (
