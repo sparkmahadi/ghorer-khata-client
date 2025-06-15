@@ -1,159 +1,336 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 
-const IncludeProductModal = ({ editingBudgetItem, handleAddProductSubmit, handleUpdateProductSubmit, searchTerm, setSearchTerm, handleSearchProducts, loading, searchResults, handleSelectProduct, selectedProduct, isManualAllocation, setIsManualAllocation, manualAllocatedAmount, setManualAllocatedAmount, allocatedQuantity, setAllocatedQuantity, budgetItemNotes, setBudgetItemNotes, setShowAddProductModal, setSelectedProduct, setSearchResults, setEditingBudgetItem }) => {
+function IncludeProductModal({
+    editingBudgetItem,
+    handleAddProductSubmit,
+    handleUpdateProductSubmit,
+    searchTerm: initialSearchTerm,
+    setSearchTerm: setParentSearchTerm,
+    handleSearchProducts,
+    loading,
+    searchResults,
+    handleSelectProduct,
+    selectedProduct,
+    isManualAllocation,
+    setIsManualAllocation,
+    manualAllocatedAmount,
+    setManualAllocatedAmount,
+    allocatedQuantity,
+    setAllocatedQuantity,
+    budgetItemNotes,
+    setBudgetItemNotes,
+    setShowAddProductModal,
+    setSelectedProduct: setParentSelectedProduct,
+    setSearchResults: setParentSearchResults,
+    setEditingBudgetItem,
+}) {
+    // --- Internal states for the modal's form fields ---
+    const [currentSearchTerm, setCurrentSearchTerm] = useState(initialSearchTerm);
+    const [currentAllocatedQuantity, setCurrentAllocatedQuantity] = useState(allocatedQuantity);
+    const [currentPricePerUnit, setCurrentPricePerUnit] = useState(''); // New state for editable price
+    const [currentManualAllocatedAmount, setCurrentManualAllocatedAmount] = useState(manualAllocatedAmount);
+    const [currentBudgetItemNotes, setCurrentBudgetItemNotes] = useState(budgetItemNotes);
+    const [currentIsManualAllocation, setCurrentIsManualAllocation] = useState(isManualAllocation);
+
+    // --- useEffect to synchronize internal states with props ---
+    useEffect(() => {
+        console.log("Modal useEffect triggered.");
+        console.log("editingBudgetItem:", editingBudgetItem);
+        console.log("selectedProduct:", selectedProduct);
+
+        if (editingBudgetItem) {
+            // If we are editing an existing budget item
+            setCurrentSearchTerm(editingBudgetItem.item_name || '');
+            setCurrentIsManualAllocation(editingBudgetItem.manual_allocated_amount != null);
+            setCurrentManualAllocatedAmount(editingBudgetItem.manual_allocated_amount?.toString() || '');
+            setCurrentAllocatedQuantity(editingBudgetItem.allocated_quantity?.toString() || '');
+            // When editing, if a quantity was allocated, use the calculated price or a stored price
+            if (editingBudgetItem.allocated_quantity && editingBudgetItem.manual_allocated_amount == null) {
+                // If there's an existing total and quantity, calculate initial price per unit
+                const calculatedPrice = editingBudgetItem.total_allocated_amount / editingBudgetItem.allocated_quantity;
+                setCurrentPricePerUnit(calculatedPrice?.toFixed(2) || '');
+            } else {
+                setCurrentPricePerUnit(''); // Clear if not applicable
+            }
+            setCurrentBudgetItemNotes(editingBudgetItem.notes || '');
+        } else if (selectedProduct) {
+            // If a new product is selected from the search results
+            setCurrentSearchTerm(selectedProduct.item_name || '');
+            setCurrentAllocatedQuantity('');
+            // Pre-fill price per unit with selected product's base price
+            setCurrentPricePerUnit(selectedProduct.price?.toString() || '');
+            setCurrentManualAllocatedAmount('');
+            setCurrentIsManualAllocation(false); // Default to quantity allocation
+            setCurrentBudgetItemNotes('');
+        } else {
+            // If the modal is opened freshly for adding, without a selected product initially
+            setCurrentSearchTerm('');
+            setCurrentAllocatedQuantity('');
+            setCurrentPricePerUnit(''); // Clear price when no product
+            setCurrentManualAllocatedAmount('');
+            setCurrentIsManualAllocation(false);
+            setCurrentBudgetItemNotes('');
+        }
+    }, [editingBudgetItem, selectedProduct]); // Dependencies: re-run when these props change
+
+    // --- Handlers for internal state changes ---
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+
+        if (!selectedProduct && !editingBudgetItem) {
+            alert('Please select a product or choose an item to edit.');
+            return;
+        }
+
+        let itemData = {
+            product_id: selectedProduct?.id || editingBudgetItem?.product_id,
+        };
+
+        if (currentIsManualAllocation) {
+            const amount = parseFloat(currentManualAllocatedAmount);
+            if (isNaN(amount) || amount <= 0) {
+                alert('Please enter a valid manual allocated amount.');
+                return;
+            }
+            itemData.manual_allocated_amount = amount;
+            itemData.allocated_quantity = null;
+            itemData.price_per_unit = null; // Ensure this is nullified for manual allocation
+        } else {
+            const qty = parseFloat(currentAllocatedQuantity);
+            const price = parseFloat(currentPricePerUnit);
+            if (isNaN(qty) || qty <= 0) {
+                alert('Please enter a valid allocated quantity.');
+                return;
+            }
+            if (isNaN(price) || price <= 0) {
+                alert('Please enter a valid price per unit.');
+                return;
+            }
+
+            itemData.allocated_quantity = qty;
+            itemData.price_per_unit = price; // Add the price_per_unit to the data
+            itemData.manual_allocated_amount = null; // Ensure this is nullified for quantity allocation
+        }
+
+        if (currentBudgetItemNotes.trim()) {
+            itemData.notes = currentBudgetItemNotes.trim();
+        }
+
+        try {
+            if (editingBudgetItem) {
+                // When updating, you'll likely need the budget item ID
+                itemData.budget_item_id = editingBudgetItem.id; // Make sure your API expects this
+                await handleUpdateProductSubmit(e, itemData);
+            } else {
+                await handleAddProductSubmit(e, itemData);
+            }
+            handleClose();
+        } catch (error) {
+            console.error("Submission error:", error);
+            alert(`Failed to save allocation: ${error.message || 'An unknown error occurred'}`);
+        }
+    };
+
+    const handleClose = () => {
+        setShowAddProductModal(false);
+        setEditingBudgetItem(null);
+        setParentSelectedProduct(null);
+        setParentSearchTerm('');
+        setParentSearchResults([]);
+        // Reset the prop states in parent
+        setAllocatedQuantity('');
+        setManualAllocatedAmount('');
+        setBudgetItemNotes('');
+        setIsManualAllocation(false);
+
+        // Also reset internal modal states for next open
+        setCurrentSearchTerm('');
+        setCurrentAllocatedQuantity('');
+        setCurrentPricePerUnit(''); // Reset the new price field
+        setCurrentManualAllocatedAmount('');
+        setCurrentIsManualAllocation(false);
+        setCurrentBudgetItemNotes('');
+    };
+
+    // Calculate estimated total based on current internal states
+    const estimatedTotal = (parseFloat(currentAllocatedQuantity) || 0) * (parseFloat(currentPricePerUnit) || 0);
 
     return (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-75 flex items-center justify-center p-4 z-50 animate-fade-in">
-            <div className="bg-white rounded-xl shadow-2xl p-8 w-full max-w-md transform transition-transform duration-300 scale-100 animate-slide-up">
-                <h3 className="text-2xl font-bold mb-5 text-blue-700 text-center">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white p-6 rounded-lg shadow-xl max-w-md w-full">
+                <h3 className="text-2xl font-bold mb-4 text-gray-800">
                     {editingBudgetItem ? 'Edit Product Allocation' : 'Add Product Allocation'}
                 </h3>
-                <form onSubmit={editingBudgetItem ? handleUpdateProductSubmit : handleAddProductSubmit} className="space-y-5">
-                    {/* Product Search/Selection */}
-                    {!editingBudgetItem ? ( // Only show search for adding new item
-                        <div className="relative">
-                            <label className="block text-gray-700 font-medium mb-2">Search Product:</label>
+                {loading && <p className="text-blue-600 mb-3">Processing...</p>}
+
+                <form onSubmit={handleSubmit}>
+                    {/* Product Search and Selection */}
+                    {!editingBudgetItem && (
+                        <div className="mb-4">
+                            <label htmlFor="productSearch" className="block text-sm font-medium text-gray-700 mb-1">
+                                Search Products
+                            </label>
                             <input
                                 type="text"
-                                placeholder="Type to search products..."
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
-                                className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm p-3 text-lg pr-12"
-                            />
-                            <button
-                                type="button"
-                                onClick={handleSearchProducts}
+                                id="productSearch"
+                                className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                                value={currentSearchTerm}
+                                onChange={(e) => {
+                                    setCurrentSearchTerm(e.target.value);
+                                    if (e.target.value.trim().length > 0 && !selectedProduct) {
+                                        setParentSearchTerm(e.target.value);
+                                    } else if (e.target.value.trim().length === 0) {
+                                        setParentSearchTerm('');
+                                        setParentSearchResults([]);
+                                    }
+                                }}
+                                placeholder="Start typing to search products..."
                                 disabled={loading}
-                                className="absolute right-2 top-9 bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-md text-sm transition duration-200 ease-in-out disabled:opacity-50 disabled:cursor-not-allowed"
-                            >
-                                {loading ? 'Searching...' : 'Search'}
-                            </button>
-                            {loading && searchTerm.trim().length > 0 && (
-                                <p className="text-sm text-gray-500 mt-1">Searching...</p>
-                            )}
-                            {searchTerm.trim().length > 0 && searchResults.length === 0 && !loading && (
-                                <p className="text-sm text-gray-500 mt-1">No other products found matching your search.</p>
-                            )}
-
-
-                            {searchResults.length > 0 && (
-                                <ul className="absolute z-10 w-full bg-white border border-gray-300 rounded-lg mt-2 max-h-48 overflow-y-auto shadow-xl">
-                                    {searchResults.map(product => (
+                            />
+                            {searchResults.length > 0 && currentSearchTerm.length > 0 && !selectedProduct && (
+                                <ul className="mt-2 border border-gray-200 rounded-md max-h-48 overflow-y-auto bg-white shadow-lg">
+                                    {searchResults.map((product) => (
                                         <li
-                                            key={product._id}
-                                            onClick={() => handleSelectProduct(product)}
-                                            className="p-3 cursor-pointer hover:bg-blue-50 hover:text-blue-700 border-b border-gray-100 last:border-b-0 text-gray-800 text-base"
+                                            key={product.id}
+                                            className="p-2 cursor-pointer hover:bg-gray-100 flex justify-between items-center"
+                                            onClick={() => {
+                                                handleSelectProduct(product);
+                                            }}
                                         >
-                                            {product.item_name} (Category: {product.category_id})
+                                            <span>{product.item_name}</span>
+                                            <span className="text-sm text-gray-500">${product.price?.toFixed(2)} / {product.unit}</span>
                                         </li>
                                     ))}
                                 </ul>
                             )}
                         </div>
-                    ) : (
-                        // Display selected product for editing mode
-                        <div className="p-3 bg-gray-100 rounded-md border border-gray-200">
-                            <p className="font-semibold text-gray-800">Editing Product: {selectedProduct?.item_name}</p>
-                            <p className="text-sm text-gray-600">Base Price: ${selectedProduct?.price?.toFixed(2) || 'N/A'}/{selectedProduct?.unit || 'Unit'}</p>
-                        </div>
                     )}
 
+                    {/* Display selected product details (shows base price as reference) */}
                     {selectedProduct && (
-                        <div className="p-4 bg-blue-50 rounded-lg border border-blue-200 text-blue-800">
-                            <p className="font-semibold">Selected Product: {selectedProduct.item_name}</p>
-                            <p className="italic">Category: {selectedProduct.category_id}</p>
-                            <p className="italic">Subcategory: {selectedProduct.subcategory_id}</p>
-                            <p className="text-sm font-semibold">Base Price: ${selectedProduct.price?.toFixed(2) || 'N/A'}/{selectedProduct.unit || 'Unit'}</p>
+                        <div className="mb-4 p-3 bg-blue-50 rounded-md border border-blue-200">
+                            <p className="font-semibold text-blue-800 mb-1">Selected Product:</p>
+                            <p className="text-gray-700"><strong>Name:</strong> {selectedProduct.item_name}</p>
+                            <p className="text-gray-700"><strong>Base Price:</strong> ${selectedProduct.price_per_unit?.toFixed(2) || 'N/A'} {selectedProduct.unit ? `/${selectedProduct.unit}` : ''}</p>
                         </div>
                     )}
 
                     {/* Allocation Method Toggle */}
-                    <div>
-                        <label className="inline-flex items-center">
-                            <input
-                                type="checkbox"
-                                className="form-checkbox h-5 w-5 text-blue-600 rounded-md"
-                                checked={isManualAllocation}
-                                onChange={() => setIsManualAllocation(!isManualAllocation)}
-                            />
-                            <span className="ml-2 text-gray-700 font-medium">Allocate by Manual Amount</span>
+                    <div className="mb-4 flex items-center">
+                        <input
+                            type="checkbox"
+                            id="manualAllocationToggle"
+                            checked={currentIsManualAllocation}
+                            onChange={(e) => setCurrentIsManualAllocation(e.target.checked)}
+                            className="mr-2 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                        />
+                        <label htmlFor="manualAllocationToggle" className="text-sm font-medium text-gray-700">
+                            Manually enter total allocated amount
                         </label>
                     </div>
 
-                    {/* Allocation Inputs */}
-                    {isManualAllocation ? (
-                        <label className="block">
-                            <span className="text-gray-700 font-medium">Manual Allocated Amount ($):</span>
+                    {/* Quantity or Manual Amount Input */}
+                    {currentIsManualAllocation ? (
+                        <div className="mb-4">
+                            <label htmlFor="manualAllocatedAmount" className="block text-sm font-medium text-gray-700 mb-1">
+                                Manual Total Allocated Amount ($)
+                            </label>
                             <input
                                 type="number"
-                                value={manualAllocatedAmount}
-                                onChange={(e) => setManualAllocatedAmount(e.target.value)}
-                                required
+                                id="manualAllocatedAmount"
+                                className="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                                value={currentManualAllocatedAmount}
+                                onChange={(e) => setCurrentManualAllocatedAmount(e.target.value)}
+                                min="0"
                                 step="0.01"
-                                className="mt-2 block w-full rounded-lg border-gray-300 shadow-sm p-3 text-lg"
+                                placeholder="e.g., 150.00"
+                                required={currentIsManualAllocation}
+                                disabled={loading}
                             />
-                        </label>
+                        </div>
                     ) : (
-                        <label className="block">
-                            <span className="text-gray-700 font-medium">Allocated Quantity ({selectedProduct?.unit || 'Units'}):</span>
-                            <input
-                                type="number"
-                                value={allocatedQuantity}
-                                onChange={(e) => setAllocatedQuantity(e.target.value)}
-                                required
-                                step="0.01"
-                                className="mt-2 block w-full rounded-lg border-gray-300 shadow-sm p-3 text-lg"
-                            />
-                            {selectedProduct && allocatedQuantity && (
-                                <p className="text-sm text-gray-500 mt-2">
-                                    Calculated Amount: <span className="font-semibold text-blue-600">${(parseFloat(allocatedQuantity) * (selectedProduct.price || 0)).toFixed(2)}</span>
+                        <>
+                            <div className="mb-4">
+                                <label htmlFor="allocatedQuantity" className="block text-sm font-medium text-gray-700 mb-1">
+                                    Allocated Quantity {selectedProduct?.unit ? `(${selectedProduct.unit})` : ''}
+                                </label>
+                                <input
+                                    type="number"
+                                    id="allocatedQuantity"
+                                    className="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                                    value={currentAllocatedQuantity}
+                                    onChange={(e) => setCurrentAllocatedQuantity(e.target.value)}
+                                    min="0"
+                                    step="any"
+                                    placeholder="e.g., 10"
+                                    required={!currentIsManualAllocation}
+                                    disabled={loading}
+                                />
+                            </div>
+                            <div className="mb-4">
+                                <label htmlFor="pricePerUnit" className="block text-sm font-medium text-gray-700 mb-1">
+                                    Price Per Unit ($)
+                                </label>
+                                <input
+                                    type="number"
+                                    id="pricePerUnit"
+                                    className="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                                    value={currentPricePerUnit}
+                                    onChange={(e) => setCurrentPricePerUnit(e.target.value)}
+                                    min="0"
+                                    step="0.01"
+                                    placeholder="e.g., 15.00"
+                                    required={!currentIsManualAllocation}
+                                    disabled={loading}
+                                />
+                            </div>
+                            {/* Display Estimated Total */}
+                            {(parseFloat(currentAllocatedQuantity) > 0 || parseFloat(currentPricePerUnit) > 0) && (
+                                <p className="text-md text-gray-700 mb-4">
+                                    Estimated Total: <span className="font-bold text-green-700">${estimatedTotal.toFixed(2)}</span>
                                 </p>
                             )}
-                        </label>
+                        </>
                     )}
 
-                    <label className="block">
-                        <span className="text-gray-700 font-medium">Notes (Optional):</span>
+                    {/* Notes Input */}
+                    <div className="mb-6">
+                        <label htmlFor="budgetItemNotes" className="block text-sm font-medium text-gray-700 mb-1">
+                            Notes (Optional)
+                        </label>
                         <textarea
-                            value={budgetItemNotes}
-                            onChange={(e) => setBudgetItemNotes(e.target.value)}
+                            id="budgetItemNotes"
+                            className="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                            value={currentBudgetItemNotes}
+                            onChange={(e) => setCurrentBudgetItemNotes(e.target.value)}
                             rows="3"
-                            className="mt-2 block w-full rounded-lg border-gray-300 shadow-sm p-3 text-lg"
+                            placeholder="Add any specific notes for this allocation..."
+                            disabled={loading}
                         ></textarea>
-                    </label>
+                    </div>
 
                     {/* Action Buttons */}
-                    <div className="flex justify-end space-x-4 mt-6">
-                        <button
-                            type="submit"
-                            disabled={loading || !selectedProduct}
-                            className="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg transition duration-300 ease-in-out shadow-md disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105"
-                        >
-                            {loading ? 'Saving...' : (editingBudgetItem ? 'Update Allocation' : 'Add Allocation')}
-                        </button>
+                    <div className="flex justify-end space-x-3">
                         <button
                             type="button"
-                            onClick={() => {
-                                setShowAddProductModal(false);
-                                setSelectedProduct(null);
-                                setEditingBudgetItem(null);
-                                setSearchTerm('');
-                                setSearchResults([]);
-                                setAllocatedQuantity('');
-                                setManualAllocatedAmount('');
-                                setBudgetItemNotes('');
-                                setIsManualAllocation(false);
-                            }}
+                            onClick={handleClose}
+                            className="px-4 py-2 bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400 transition-colors duration-200"
                             disabled={loading}
-                            className="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-3 px-6 rounded-lg transition duration-300 ease-in-out shadow-md disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105"
                         >
                             Cancel
                         </button>
+                        <button
+                            type="submit"
+                            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                            disabled={loading || (!selectedProduct && !editingBudgetItem) || (!currentIsManualAllocation && (parseFloat(currentAllocatedQuantity) <= 0 || parseFloat(currentPricePerUnit) <= 0)) || (currentIsManualAllocation && parseFloat(currentManualAllocatedAmount) <= 0)}
+                        >
+                            {editingBudgetItem ? 'Update Allocation' : 'Add Allocation'}
+                        </button>
                     </div>
                 </form>
-            </div >
-        </div >
+            </div>
+        </div>
     );
-};
+}
 
-export default IncludeProductModal;
+export default IncludeProductModal; 

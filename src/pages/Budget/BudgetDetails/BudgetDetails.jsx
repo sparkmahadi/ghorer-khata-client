@@ -242,7 +242,7 @@ function BudgetDetails() {
         setBudgetItemNotes('');
     };
 
-    const handleAddProductSubmit = async (e) => {
+    const handleAddProductSubmit = async (e, itemData) => {
         e.preventDefault();
         setLoading(true);
         setError(null);
@@ -252,32 +252,13 @@ function BudgetDetails() {
             setLoading(false);
             return;
         }
-
-        let itemData = { product_id: selectedProduct.id }; // Use product's 'id' as per your structure
-
-        if (isManualAllocation) {
-            const amount = parseFloat(manualAllocatedAmount);
-            if (isNaN(amount) || amount <= 0) {
-                setError('Please enter a valid manual allocated amount.');
-                setLoading(false);
-                return;
-            }
-            itemData.manual_allocated_amount = amount;
-        } else {
-            const qty = parseFloat(allocatedQuantity);
-            if (isNaN(qty) || qty <= 0) {
-                setError('Please enter a valid allocated quantity.');
-                setLoading(false);
-                return;
-            }
-            itemData.allocated_quantity = qty;
-        }
-
+        
         if (budgetItemNotes.trim()) {
             itemData.notes = budgetItemNotes.trim();
         }
 
         try {
+            console.log('itemdata', itemData);
             const updatedBudget = await addBudgetItem(budgetId, itemData);
             setBudget(updatedBudget); // Update UI with latest budget data from backend
             setShowAddProductModal(false); // Close modal
@@ -353,9 +334,9 @@ function BudgetDetails() {
 
         try {
             const updatedBudget = await updateBudgetItem(budgetId, editingBudgetItem.budgetItemId, itemData);
-            setBudget(updatedBudget); // Update UI
-            setShowAddProductModal(false); // Close modal
-            setEditingBudgetItem(null); // Clear editing state
+            setBudget(updatedBudget);
+            setShowAddProductModal(false);
+            setEditingBudgetItem(null);
             setSelectedProduct(null);
             setAllocatedQuantity('');
             setManualAllocatedAmount('');
@@ -517,7 +498,7 @@ function BudgetDetails() {
                                             </p>
                                             <p className="text-sm text-gray-700 mt-1">
                                                 Allocated: <span className="font-bold text-green-700">${(item.allocated_amount || 0).toFixed(2)}</span>
-                                                {item.allocated_quantity && ` (${item.allocated_quantity} ${item.unit || ''} @ $${(item.base_price_at_allocation || 0).toFixed(2)}/${item.unit || ''})`}
+                                                {item.allocated_quantity && ` (${item.allocated_quantity} ${item.unit || ''} @ $${(item.price_per_unit || 0).toFixed(2)}/${item.unit || ''})`}
                                             </p>
                                             {item.notes && <p className="text-xs text-gray-500 italic">Notes: {item.notes}</p>}
                                         </div>
@@ -567,7 +548,7 @@ function BudgetDetails() {
                                 <tr>
                                     <th className="py-3 px-4 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">Item Name</th>
                                     <th className="py-3 px-4 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">Qty ({products[0]?.unit || 'Unit'})</th>
-                                    <th className="py-3 px-4 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">Price</th>
+                                    <th className="py-3 px-4 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">Categories</th>
                                     <th className="py-3 px-4 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">Actions</th>
                                 </tr>
                             </thead>
@@ -578,7 +559,7 @@ function BudgetDetails() {
                                             <td className="py-3 px-4 font-medium text-gray-900">{product.item_name}</td>
 
                                             <td className="py-3 px-4 text-gray-700">{product.quantity} {product.unit}</td>
-                                            <td className="py-3 px-4 text-gray-700">${product.price?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                                            <td className="py-3 px-4 text-gray-700">{product.category_id} &gt; {product.subcategory_id}</td>
                                             <td className="py-3 px-4 flex gap-2">
                                                 <button
                                                     onClick={() => {
