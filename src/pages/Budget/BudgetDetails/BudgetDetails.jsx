@@ -7,6 +7,7 @@ import FinancialSummary from './Components/FinancialSummary';
 import BasicBudgetInfo from './Components/BasicBudgetInfo';
 import AddProductForm from '../../Products/AddProductForm';
 import { useProductsAndCategories } from '../../../contexts/ProductAndCategoryContext';
+import { toast } from 'react-toastify';
 
 const handleApiResponse = (response) => {
     if (response.data.success) {
@@ -71,7 +72,7 @@ const searchMasterProducts = async (searchTerm) => {
 
 function BudgetDetails() {
     const { budgetId } = useParams();
-    const {products, loadingProducts, categories, fetchProducts } = useProductsAndCategories();
+    const { products, loadingProducts, categories, fetchProducts } = useProductsAndCategories();
     const navigate = useNavigate();
 
     const [budget, setBudget] = useState(null);
@@ -98,7 +99,7 @@ function BudgetDetails() {
 
     const [editingBudgetItem, setEditingBudgetItem] = useState(null); // The budget item being edited
 
-      const [apiInProgress, setApiInProgress] = useState(false);
+    const [apiInProgress, setApiInProgress] = useState(false);
 
 
     // --- Data Fetching ---
@@ -252,7 +253,7 @@ function BudgetDetails() {
             setLoading(false);
             return;
         }
-        
+
         if (budgetItemNotes.trim()) {
             itemData.notes = budgetItemNotes.trim();
         }
@@ -278,12 +279,9 @@ function BudgetDetails() {
     };
 
     const handleEditProductClick = (item) => {
+        console.log('to edit', item);
         setEditingBudgetItem(item);
-        setSelectedProduct({ // Pre-fill selected product data for editing
-            id: item.product_id,
-            item_name: item.item_name,
-            price: item.base_price_at_allocation // Use the price stored at allocation
-        });
+        setSelectedProduct(item);
         if (item.manual_allocated_amount !== null && item.manual_allocated_amount !== undefined) {
             setIsManualAllocation(true);
             setManualAllocatedAmount(item.manual_allocated_amount.toString());
@@ -297,8 +295,9 @@ function BudgetDetails() {
         setShowAddProductModal(true); // Reuse the same modal for editing
     };
 
-    const handleUpdateProductSubmit = async (e) => {
+    const handleUpdateProductSubmit = async (e, receivedItemData) => {
         e.preventDefault();
+        console.log("receivedItemData", receivedItemData);
         setLoading(true);
         setError(null);
 
@@ -310,8 +309,8 @@ function BudgetDetails() {
 
         let itemData = {};
 
-        if (isManualAllocation) {
-            const amount = parseFloat(manualAllocatedAmount);
+        if (receivedItemData.manual_allocated_amount) {
+            const amount = parseFloat(receivedItemData.manual_allocated_amount);
             if (isNaN(amount) || amount <= 0) {
                 setError('Please enter a valid manual allocated amount.');
                 setLoading(false);
@@ -320,13 +319,21 @@ function BudgetDetails() {
             itemData.manual_allocated_amount = amount;
             itemData.allocated_quantity = null; // Ensure the other field is explicitly null
         } else {
-            const qty = parseFloat(allocatedQuantity);
+            const qty = parseFloat(receivedItemData.allocated_quantity);
             if (isNaN(qty) || qty <= 0) {
                 setError('Please enter a valid allocated quantity.');
                 setLoading(false);
                 return;
             }
+            const price = parseFloat(receivedItemData.price_per_unit);
+            console.log("receivedItemData", receivedItemData);
+            if (isNaN(price) || price <= 0) {
+                setError('Please enter a valid price.');
+                setLoading(false);
+                return;
+            }
             itemData.allocated_quantity = qty;
+            itemData.price_per_unit = price;
             itemData.manual_allocated_amount = null; // Ensure the other field is explicitly null
         }
 
@@ -369,11 +376,62 @@ function BudgetDetails() {
         }
     };
 
-  // Filter subcategories based on selected category for forms
-  const getFilteredSubcategories = (categoryId) => {
-    const selectedCategory = categories.find(cat => cat.id === categoryId);
-    return selectedCategory ? selectedCategory.subcategories : [];
-  };
+    const handleRecalculateBudget = async () => {
+        setLoading(true);
+        setError(null);
+        try {
+            const response = await axios.put(`${import.meta.env.VITE_API_BASE_URL}/api/budgets/recalculate-figures/${budgetId}`);
+            const updatedBudget = handleApiResponse(response);
+            if (response?.data?.success) {
+                toast.success("Budget Updated")
+            } else {
+                return toast.error("Error occured. Not updated")
+            }
+            setBudget(updatedBudget);
+            // Initialize main budget edit form states
+            setEditName(updatedBudget.budgetName || ''); // Using budgetName from your structure
+            setEditOverallBudgetAmount(updatedBudget.overallBudgetAmount?.toString() || '');
+            setEditStartDate(updatedBudget.period?.startDate ? updatedBudget.period.startDate.split('T')[0] : '');
+            setEditEndDate(updatedBudget.period?.endDate ? updatedBudget.period.endDate.split('T')[0] : '');
+        } catch (err) {
+            setError(err.message);
+            console.error('Error in fetchBudgetById:', err.response?.data?.message || err.message);
+        } finally {
+            setLoading(false);
+        }
+    }
+
+    const handleResetFigures = async () => {
+        setLoading(true);
+        setError(null);
+        try {
+            const response = await axios.put(`${import.meta.env.VITE_API_BASE_URL}/api/budgets/reset-figures/${budgetId}`);
+            console.log(response);
+            const updatedBudget = response.data.data;
+            if (response?.data?.success) {
+                setBudget(updatedBudget);
+                // Initialize main budget edit form states
+                setEditName(updatedBudget.budgetName || ''); // Using budgetName from your structure
+                setEditOverallBudgetAmount(updatedBudget.overallBudgetAmount?.toString() || '');
+                setEditStartDate(updatedBudget.period?.startDate ? updatedBudget.period.startDate.split('T')[0] : '');
+                setEditEndDate(updatedBudget.period?.endDate ? updatedBudget.period.endDate.split('T')[0] : '');
+                toast.success("Budget Reset");
+            } else {
+                return toast.error("Error occured. Not Reset")
+            }
+        } catch (err) {
+            setError(err.message);
+            console.error('Error in fetchBudgetById:', err.response?.data?.message || err.message);
+        } finally {
+            setLoading(false);
+        }
+    }
+
+    // Filter subcategories based on selected category for forms
+    const getFilteredSubcategories = (categoryId) => {
+        const selectedCategory = categories.find(cat => cat.id === categoryId);
+        return selectedCategory ? selectedCategory.subcategories : [];
+    };
 
 
     if (loading && !budget) return <p className="text-center py-4 text-gray-600">Loading budget details...</p>;
@@ -400,6 +458,18 @@ function BudgetDetails() {
                     className="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-6 rounded-lg transition duration-300 ease-in-out shadow-lg transform hover:scale-105"
                 >
                     Delete Budget
+                </button>
+                <button
+                    onClick={handleRecalculateBudget}
+                    className="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-6 rounded-lg transition duration-300 ease-in-out shadow-lg transform hover:scale-105"
+                >
+                    Recalcualate Budget
+                </button>
+                <button
+                    onClick={handleResetFigures}
+                    className="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-6 rounded-lg transition duration-300 ease-in-out shadow-lg transform hover:scale-105"
+                >
+                    Reset Figures
                 </button>
             </div>
 
@@ -578,6 +648,8 @@ function BudgetDetails() {
                             </tbody>
                         </table>
                     </div>
+
+
                     {/* Add New Product Button / Form */}
                     <AddProductForm
                         apiInProgress={apiInProgress}

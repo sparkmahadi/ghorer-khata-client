@@ -46,9 +46,7 @@ function IncludeProductModal({
             setCurrentAllocatedQuantity(editingBudgetItem.allocated_quantity?.toString() || '');
             // When editing, if a quantity was allocated, use the calculated price or a stored price
             if (editingBudgetItem.allocated_quantity && editingBudgetItem.manual_allocated_amount == null) {
-                // If there's an existing total and quantity, calculate initial price per unit
-                const calculatedPrice = editingBudgetItem.total_allocated_amount / editingBudgetItem.allocated_quantity;
-                setCurrentPricePerUnit(calculatedPrice?.toFixed(2) || '');
+                setCurrentPricePerUnit(editingBudgetItem?.price_per_unit);
             } else {
                 setCurrentPricePerUnit(''); // Clear if not applicable
             }
@@ -85,7 +83,6 @@ function IncludeProductModal({
         let itemData = {
             product_id: selectedProduct?.id || editingBudgetItem?.product_id,
         };
-
         if (currentIsManualAllocation) {
             const amount = parseFloat(currentManualAllocatedAmount);
             if (isNaN(amount) || amount <= 0) {
@@ -198,7 +195,7 @@ function IncludeProductModal({
                                             }}
                                         >
                                             <span>{product.item_name}</span>
-                                            <span className="text-sm text-gray-500">${product.price?.toFixed(2)} / {product.unit}</span>
+                                            <span className="text-sm text-gray-500">${product.price_per_unit?.toFixed(2)} / {product.unit}</span>
                                         </li>
                                     ))}
                                 </ul>
@@ -207,11 +204,12 @@ function IncludeProductModal({
                     )}
 
                     {/* Display selected product details (shows base price as reference) */}
+                    {console.log(selectedProduct)}
                     {selectedProduct && (
                         <div className="mb-4 p-3 bg-blue-50 rounded-md border border-blue-200">
                             <p className="font-semibold text-blue-800 mb-1">Selected Product:</p>
                             <p className="text-gray-700"><strong>Name:</strong> {selectedProduct.item_name}</p>
-                            <p className="text-gray-700"><strong>Base Price:</strong> ${selectedProduct.price_per_unit?.toFixed(2) || 'N/A'} {selectedProduct.unit ? `/${selectedProduct.unit}` : ''}</p>
+                            <p className="text-gray-700"><strong>Categories:</strong> {selectedProduct.category_id} &gt; {selectedProduct?.subcategory_id}</p>
                         </div>
                     )}
 
