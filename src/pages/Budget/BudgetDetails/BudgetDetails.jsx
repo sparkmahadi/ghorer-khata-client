@@ -71,6 +71,23 @@ const searchMasterProducts = async (searchTerm) => {
     }
 };
 
+const getBudgetDayInfo = (startDate, endDate) => {
+    const today = new Date();
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+
+    const totalDays = Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1;
+    const currentDay = Math.ceil((today - start) / (1000 * 60 * 60 * 24)) + 1;
+    const remainingDays = totalDays - currentDay;
+
+    return {
+        currentDay: currentDay < 1 ? 0 : currentDay,
+        remainingDays: remainingDays < 0 ? 0 : remainingDays,
+        totalDays,
+    };
+};
+
+
 function BudgetDetails() {
     const { budgetId } = useParams();
     const { products, loadingProducts, categories, fetchProducts } = useProductsAndCategories();
@@ -441,68 +458,104 @@ function BudgetDetails() {
     if (!budget) return <p className="text-center py-4 text-gray-600">Budget not found or has been deleted.</p>;
 
     return (
-        <div className="bg-white p-6 rounded-xl shadow-2xl border border-gray-200 mx-auto max-w-4xl my-8 font-inter">
-            <h2 className="text-3xl font-extrabold mb-6 text-blue-800 text-center animate-fade-in">
-                Budget Overview: {budget?.budgetName}
-            </h2>
+        <>
+            <div className="bg-white p-6 rounded-xl shadow-2xl border border-gray-200 mx-auto  my-8 font-inter xl:flex xl:gap-5">
 
-            {/* Action Buttons: Edit and Delete */}
-            <div className="flex justify-center space-x-4 mb-8">
-                <button
-                    onClick={() => setIsEditing(!isEditing)}
-                    className="bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-2 px-6 rounded-lg transition duration-300 ease-in-out shadow-lg transform hover:scale-105"
-                >
-                    {isEditing ? 'Cancel Budget Edit' : 'Edit Budget'}
-                </button>
-                <button
-                    onClick={handleDeleteBudget}
-                    className="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-6 rounded-lg transition duration-300 ease-in-out shadow-lg transform hover:scale-105"
-                >
-                    Delete Budget
-                </button>
-                <button
-                    onClick={handleRecalculateBudget}
-                    className="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-6 rounded-lg transition duration-300 ease-in-out shadow-lg transform hover:scale-105"
-                >
-                    Recalcualate Budget
-                </button>
-                <button
-                    onClick={handleResetFigures}
-                    className="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-6 rounded-lg transition duration-300 ease-in-out shadow-lg transform hover:scale-105"
-                >
-                    Reset Figures
-                </button>
-            </div>
+                {/* side section */}
+                <div className='xl:w-1/2'>
+                    <h2 className="xl:text-2xl font-extrabold mb-6 text-blue-800 text-center animate-fade-in">
+                        Budget Overview: {budget?.budgetName}
+                    </h2>
 
-            {isEditing ? (
-                // Edit Form Mode for overall budget
-                <BasicBudgetForm
-                    editName={editName}
-                    setEditName={setEditName}
-                    editOverallBudgetAmount={editOverallBudgetAmount}
-                    setEditOverallBudgetAmount={setEditOverallBudgetAmount}
-                    editStartDate={editStartDate}
-                    editEndDate={editEndDate}
-                    setEditStartDate={setEditStartDate}
-                    setEditEndDate={setEditEndDate}
-                    loading={loading}
-                    setIsEditing={setIsEditing}
-                    setLoading={setLoading}
-                    setError={setError}
-                    budgetId={budgetId}
-                    setBudget={setBudget}
-                />
-            ) : (
-                // View Mode
-                <>
-                    {/* Financial Summaries Dashboard Section */}
-                    <FinancialSummary
-                        budget={budget}
-                    />
+                    {/* Action Buttons: Edit and Delete */}
+                    <div className="flex justify-center space-x-4 mb-8">
+                        <button
+                            onClick={() => setIsEditing(!isEditing)}
+                            className="bg-yellow-500 hover:bg-yellow-600 text-white font-semibold py-2 px-2 rounded-lg transition duration-300 ease-in-out shadow-lg transform hover:scale-105 text-base"
+                        >
+                            {isEditing ? 'Cancel Budget Edit' : 'Edit Budget'}
+                        </button>
+                        <button
+                            onClick={handleDeleteBudget}
+                            className="bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-2 rounded-lg transition duration-300 ease-in-out shadow-lg transform hover:scale-105"
+                        >
+                            Delete Budget
+                        </button>
+                        <button
+                            onClick={handleRecalculateBudget}
+                            className="bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-2 rounded-lg transition duration-300 ease-in-out shadow-lg transform hover:scale-105"
+                        >
+                            Recalcualate Budget
+                        </button>
+                        <button
+                            onClick={handleResetFigures}
+                            className="bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-2 rounded-lg transition duration-300 ease-in-out shadow-lg transform hover:scale-105"
+                        >
+                            Reset Figures
+                        </button>
+                    </div>
 
-                    <BasicBudgetInfo budget={budget} formatDate={formatDate} />
+                    {isEditing ? (
+                        // Edit Form Mode for overall budget
+                        <BasicBudgetForm
+                            editName={editName}
+                            setEditName={setEditName}
+                            editOverallBudgetAmount={editOverallBudgetAmount}
+                            setEditOverallBudgetAmount={setEditOverallBudgetAmount}
+                            editStartDate={editStartDate}
+                            editEndDate={editEndDate}
+                            setEditStartDate={setEditStartDate}
+                            setEditEndDate={setEditEndDate}
+                            loading={loading}
+                            setIsEditing={setIsEditing}
+                            setLoading={setLoading}
+                            setError={setError}
+                            budgetId={budgetId}
+                            setBudget={setBudget}
+                        />
+                    ) : (
+                        // View Mode
+                        <>
+                            {/* Financial Summaries Dashboard Section */}
+                            <FinancialSummary
+                                budget={budget}
+                            />
+                        </>
+                    )}
+
+                    <div>
+                        <section className="p-5 bg-gray-100 rounded-xl shadow-sm border border-gray-200 my-6">
+                            <h3 className="text-xl font-semibold mb-3 text-gray-800">📆 Budget Timeline</h3>
+                            {(() => {
+                                const { currentDay, remainingDays, totalDays } = getBudgetDayInfo(budget.period.startDate, budget.period.endDate);
+                                return (
+                                    <p className="text-gray-700 text-lg">
+                                        Today is <span className="font-semibold text-blue-700">Day {currentDay}</span> of your {totalDays}-day budget.
+                                        <br />
+                                        <span className="font-semibold text-red-600">{remainingDays} days remaining.</span>
+                                    </p>
+                                );
+                            })()}
+                        </section>
+                        <BasicBudgetInfo budget={budget} formatDate={formatDate} />
+
+                        {/* Log Timestamps Section */}
+                        <section className="p-5 bg-gray-50 rounded-xl shadow-sm border border-gray-200">
+                            <h3 className="text-xl font-semibold mb-3 text-gray-800">Logs</h3>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-gray-700">
+                                <p><strong className="font-semibold text-gray-800">Created At:</strong> {formatDate(budget.createdAt)}</p>
+                                <p><strong className="font-semibold text-gray-800">Last Updated At:</strong> {formatDate(budget.lastUpdatedAt)}</p>
+                            </div>
+                        </section>
+                    </div>
+
+                </div>
 
 
+
+                {/* second section */}
+
+                <div className='xl:w-1/2'>
                     {/* Categories Section */}
                     <section className="mb-8 p-6 bg-gray-50 rounded-xl shadow-sm border border-gray-200">
                         <h3 className="text-xl font-semibold mb-4 text-gray-800">Categories (Allocations derived from Products)</h3>
@@ -510,7 +563,7 @@ function BudgetDetails() {
                             <ul className="space-y-4">
                                 {budget.categories.map(category => (
                                     <li key={category.id} className="bg-white p-4 rounded-lg shadow-md border border-gray-100 transform transition-transform hover:scale-[1.01] duration-200">
-                                        <h4 className="text-lg font-bold text-gray-800 mb-2">{category.name}</h4>
+                                        <h4 className="text-lg font-semibold text-gray-800 mb-2">{category.name}</h4>
                                         <p className="text-gray-700 text-sm mb-2">
                                             Allocated: <span className="font-semibold text-blue-600">${(category.allocatedAmount || 0).toFixed(2)}</span> |
                                             Utilized: <span className="font-semibold text-red-600">${(category.utilizedAmount || 0).toFixed(2)}</span>
@@ -551,7 +604,7 @@ function BudgetDetails() {
                                     setBudgetItemNotes('');
                                     setIsManualAllocation(false);
                                 }}
-                                className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold py-2 px-4 rounded-md transition duration-300 ease-in-out shadow-md transform hover:scale-105"
+                                className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold py-2 px-4 rounded-md transition duration-300 ease-in-out shadow-md transform hover:scale-105"
                             >
                                 Add Product Allocation
                             </button>
@@ -561,9 +614,11 @@ function BudgetDetails() {
                             <ul className="space-y-3">
                                 {budget.budgetItems.map(item => (
                                     <AllocatedItem
-                                    item={item}
-                                    handleEditProductClick={handleEditProductClick}
-                                    handleDeleteProduct={handleDeleteProduct}
+                                        key={item.budgetItemId}
+                                        item={item}
+                                        budgetId={budgetId}
+                                        handleEditProductClick={handleEditProductClick}
+                                        handleDeleteProduct={handleDeleteProduct}
                                     />
                                 ))}
                             </ul>
@@ -572,72 +627,85 @@ function BudgetDetails() {
                         )}
                     </section>
 
-                    {/* Log Timestamps Section */}
-                    <section className="p-5 bg-gray-50 rounded-xl shadow-sm border border-gray-200">
-                        <h3 className="text-xl font-semibold mb-3 text-gray-800">Logs</h3>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-gray-700">
-                            <p><strong className="font-semibold text-gray-800">Created At:</strong> {formatDate(budget.createdAt)}</p>
-                            <p><strong className="font-semibold text-gray-800">Last Updated At:</strong> {formatDate(budget.lastUpdatedAt)}</p>
-                        </div>
-                    </section>
-                </>
-            )}
+
+                </div>
+
+
+
+            </div>
+
 
             {/* all the products */}
             {/* Product List */}
-            {products?.length === 0 ? (
-                <p className="text-center text-gray-600">No products found. Add a new one!</p>
-            ) : (
-                <>
-                    <div className="overflow-x-auto">
-                        <h3>Select items from here...</h3>
-                        <table className="min-w-full bg-white rounded-xl shadow-md overflow-hidden">
-                            <thead className="bg-gray-200">
-                                <tr>
-                                    <th className="py-3 px-4 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">Item Name</th>
-                                    <th className="py-3 px-4 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">Qty ({products[0]?.unit || 'Unit'})</th>
-                                    <th className="py-3 px-4 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">Categories</th>
-                                    <th className="py-3 px-4 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {products?.map(product => (
-                                    <tr key={product._id} className="border-b border-gray-200 hover:bg-gray-50">
-                                        <>
-                                            <td className="py-3 px-4 font-medium text-gray-900">{product.item_name}</td>
+            <>
+                {products?.length === 0 ? (
+                    <p className="text-center text-gray-600 p-4">No products found. Add a new one!</p>
+                ) : (
+                    <div className="p-4">
+                        <h3 className="text-lg font-semibold mb-4 text-gray-800">Select an item to add to your budget:</h3>
 
-                                            <td className="py-3 px-4 text-gray-700">{product.quantity} {product.unit}</td>
-                                            <td className="py-3 px-4 text-gray-700">{product.category_id} &gt; {product.subcategory_id}</td>
-                                            <td className="py-3 px-4 flex gap-2">
-                                                <button
-                                                    onClick={() => {
-                                                        setShowAddProductModal(true);
-                                                        handleSelectProduct(product)
-                                                    }
-                                                    }
-                                                    className="bg-green-500 hover:bg-yellow-600 text-white font-bold py-1 px-3 rounded-xl shadow-md text-sm"
-                                                >
-                                                    Select
-                                                </button>
-                                            </td>
-                                        </>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
+                        {/* --- Search Input Field --- */}
+                        <div className="mb-6"> {/* Margin bottom for spacing */}
+                            <input
+                                type="text"
+                                placeholder="Search products by name..."
+                                value={searchTerm} // Bind value to state
+                                onChange={(e) => setSearchTerm(e.target.value)} // Update state on change
+                                className="
+                        w-full p-3 border border-gray-300 rounded-lg shadow-sm
+                        focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent
+                        text-gray-800 placeholder-gray-500
+                    "
+                            />
+                        </div>
+                        {/* --- End Search Input Field --- */}
+
+                        {/* Filter products based on searchTerm */}
+                        {(() => {
+                            const filteredProducts = products.filter(product =>
+                                product.item_name.toLowerCase().includes(searchTerm.toLowerCase())
+                                // You can add more fields to search, e.g.:
+                                // || product.category_id.toLowerCase().includes(searchTerm.toLowerCase())
+                                // || product.subcategory_id.toLowerCase().includes(searchTerm.toLowerCase())
+                            );
+
+                            if (filteredProducts.length === 0 && searchTerm !== '') {
+                                return (
+                                    <p className="text-center text-gray-600 p-4">No matching products found for "{searchTerm}".</p>
+                                );
+                            }
+
+                            return (
+                                // Product Grid/Flex Container
+                                <div className="flex flex-wrap gap-2">
+                                    {filteredProducts.map((product, idx) => (
+                                        <div
+                                            key={product._id}
+                                            onClick={() => {
+                                                setShowAddProductModal(true);
+                                                handleSelectProduct(product);
+                                            }}
+                                            className="
+                                    bg-white rounded-lg shadow-md p-4 cursor-pointer
+                                    hover:bg-blue-50 hover:shadow-lg transition-all duration-200
+                                    border border-gray-200 hover:border-blue-300
+                                    flex flex-col justify-between
+                                "
+                                        >
+                                            <div>
+                                                <h4 className="text-md font-bold text-gray-900 mb-1">
+                                                   {idx+1}. {product.item_name}
+                                                </h4>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            );
+                        })()}
                     </div>
+                )}
+            </>
 
-
-                    {/* Add New Product Button / Form */}
-                    <AddProductForm
-                        apiInProgress={apiInProgress}
-                        fetchProducts={fetchProducts}
-                        setApiInProgress={setApiInProgress}
-                        getFilteredSubcategories={getFilteredSubcategories}
-                        categories={categories}
-                    />
-                </>
-            )}
 
             {/* Add/Edit Product Allocation Modal */}
             {showAddProductModal && (
@@ -666,7 +734,7 @@ function BudgetDetails() {
                     setEditingBudgetItem={setEditingBudgetItem}
                 />
             )}
-        </div>
+        </>
     );
 }
 

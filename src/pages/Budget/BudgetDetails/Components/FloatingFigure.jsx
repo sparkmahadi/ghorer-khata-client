@@ -22,11 +22,11 @@ export const FloatingFigure = ({ label, value, unit = '$', colorClass, previousV
     // but for this subtle effect, Tailwind transitions suffice with state.
 
     return (
-        <div className={`p-5 rounded-xl shadow-lg border border-gray-100 flex flex-col items-center justify-center text-center
+        <div className={`p-2 rounded-xl shadow-lg border border-gray-100 flex flex-col items-center justify-center text-center
                         transition-all duration-500 ease-in-out transform hover:scale-105 cursor-default
                         ${animate ? 'ring-4 ring-opacity-75 ring-blue-300 bg-blue-50' : 'bg-white'}`}>
             <p className="text-sm font-semibold text-gray-500 mb-2">{label}</p>
-            <p className={`text-3xl font-extrabold ${colorClass || 'text-gray-900'} transition-colors duration-300`}>
+            <p className={`text-xl font-extrabold ${colorClass || 'text-gray-900'} transition-colors duration-300`}>
                 {unit}{value.toFixed(2)}
             </p>
         </div>
