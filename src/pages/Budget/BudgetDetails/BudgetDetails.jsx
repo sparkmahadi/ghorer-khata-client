@@ -9,6 +9,7 @@ import AddProductForm from '../../Products/AddProductForm';
 import { useProductsAndCategories } from '../../../contexts/ProductAndCategoryContext';
 import { toast } from 'react-toastify';
 import AllocatedItem from './Components/AllocatedItem';
+import BudgetSideBarInfo from './Components/BudgetSideBarInfo';
 
 const handleApiResponse = (response) => {
     if (response.data.success) {
@@ -118,6 +119,13 @@ function BudgetDetails() {
     const [editingBudgetItem, setEditingBudgetItem] = useState(null); // The budget item being edited
 
     const [apiInProgress, setApiInProgress] = useState(false);
+    const [isTableView, setIsTableView] = useState(true);
+
+    // Toggle function for the view mode
+    const toggleView = () => {
+        setIsTableView(prev => !prev);
+    };
+
 
 
     // --- Data Fetching ---
@@ -459,19 +467,19 @@ function BudgetDetails() {
 
     return (
         <>
-            <div className="bg-white p-6 rounded-xl shadow-2xl border border-gray-200 mx-auto  my-8 font-inter xl:flex xl:gap-5">
+            <div className="bg-white p-6 rounded-xl shadow-2xl border border-gray-200 mx-auto  my-8 font-inter ">
 
                 {/* side section */}
-                <div className='xl:w-1/2'>
+                <div className=''>
                     <h2 className="xl:text-2xl font-extrabold mb-6 text-blue-800 text-center animate-fade-in">
                         Budget Overview: {budget?.budgetName}
                     </h2>
 
                     {/* Action Buttons: Edit and Delete */}
-                    <div className="flex justify-center space-x-4 mb-8">
+                    <div className="xl:flex justify-center space-x-4 mb-8 text-xs xl:text-base">
                         <button
                             onClick={() => setIsEditing(!isEditing)}
-                            className="bg-yellow-500 hover:bg-yellow-600 text-white font-semibold py-2 px-2 rounded-lg transition duration-300 ease-in-out shadow-lg transform hover:scale-105 text-base"
+                            className="bg-yellow-500 hover:bg-yellow-600 text-white font-semibold py-2 px-2 rounded-lg transition duration-300 ease-in-out shadow-lg transform hover:scale-105"
                         >
                             {isEditing ? 'Cancel Budget Edit' : 'Edit Budget'}
                         </button>
@@ -523,31 +531,7 @@ function BudgetDetails() {
                         </>
                     )}
 
-                    <div>
-                        <section className="p-5 bg-gray-100 rounded-xl shadow-sm border border-gray-200 my-6">
-                            <h3 className="text-xl font-semibold mb-3 text-gray-800">📆 Budget Timeline</h3>
-                            {(() => {
-                                const { currentDay, remainingDays, totalDays } = getBudgetDayInfo(budget.period.startDate, budget.period.endDate);
-                                return (
-                                    <p className="text-gray-700 text-lg">
-                                        Today is <span className="font-semibold text-blue-700">Day {currentDay}</span> of your {totalDays}-day budget.
-                                        <br />
-                                        <span className="font-semibold text-red-600">{remainingDays} days remaining.</span>
-                                    </p>
-                                );
-                            })()}
-                        </section>
-                        <BasicBudgetInfo budget={budget} formatDate={formatDate} />
-
-                        {/* Log Timestamps Section */}
-                        <section className="p-5 bg-gray-50 rounded-xl shadow-sm border border-gray-200">
-                            <h3 className="text-xl font-semibold mb-3 text-gray-800">Logs</h3>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-gray-700">
-                                <p><strong className="font-semibold text-gray-800">Created At:</strong> {formatDate(budget.createdAt)}</p>
-                                <p><strong className="font-semibold text-gray-800">Last Updated At:</strong> {formatDate(budget.lastUpdatedAt)}</p>
-                            </div>
-                        </section>
-                    </div>
+                        <BudgetSideBarInfo budget={budget} formatDate={formatDate} getBudgetDayInfo={getBudgetDayInfo} />
 
                 </div>
 
@@ -555,7 +539,7 @@ function BudgetDetails() {
 
                 {/* second section */}
 
-                <div className='xl:w-1/2'>
+                <div className=''>
                     {/* Categories Section */}
                     <section className="mb-8 p-6 bg-gray-50 rounded-xl shadow-sm border border-gray-200">
                         <h3 className="text-xl font-semibold mb-4 text-gray-800">Categories (Allocations derived from Products)</h3>
@@ -589,43 +573,89 @@ function BudgetDetails() {
                     </section>
 
                     {/* Product Allocations Section */}
-                    <section className="mb-8 p-6 bg-gray-50 rounded-xl shadow-sm border border-gray-200">
-                        <h3 className="text-xl font-semibold mb-4 text-gray-800 flex justify-between items-center">
-                            Product Allocations
-                            <button
-                                onClick={() => {
-                                    setShowAddProductModal(true);
-                                    setSelectedProduct(null); // Clear any previously selected product
-                                    setEditingBudgetItem(null); // Ensure we are in add mode
-                                    setSearchTerm(''); // Clear search term
-                                    setSearchResults([]); // Clear search results
-                                    setAllocatedQuantity('');
-                                    setManualAllocatedAmount('');
-                                    setBudgetItemNotes('');
-                                    setIsManualAllocation(false);
-                                }}
-                                className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold py-2 px-4 rounded-md transition duration-300 ease-in-out shadow-md transform hover:scale-105"
-                            >
-                                Add Product Allocation
-                            </button>
-                        </h3>
+                      {/* Product Allocations Section */}
+            <section className="mb-8 p-6 bg-gray-50 rounded-xl shadow-sm border border-gray-200">
+                <h3 className="text-xl font-semibold mb-4 text-gray-800 flex justify-between items-center">
+                    Product Allocations
+                    <div className="flex items-center space-x-3"> {/* Use flex to align buttons */}
+                        {/* Toggle Button */}
+                        <button
+                            onClick={toggleView}
+                            className="bg-gray-700 hover:bg-gray-800 text-white text-sm font-semibold py-2 px-4 rounded-md transition duration-300 ease-in-out shadow-md"
+                            aria-pressed={isTableView}
+                        >
+                            Switch to {isTableView ? 'Card View' : 'Table View'}
+                        </button>
 
-                        {budget?.budgetItems && budget?.budgetItems.length > 0 ? (
-                            <ul className="space-y-3">
-                                {budget.budgetItems.map(item => (
-                                    <AllocatedItem
-                                        key={item.budgetItemId}
-                                        item={item}
-                                        budgetId={budgetId}
-                                        handleEditProductClick={handleEditProductClick}
-                                        handleDeleteProduct={handleDeleteProduct}
-                                    />
-                                ))}
-                            </ul>
-                        ) : (
-                            <p className="text-gray-600 text-center py-4">No product allocations in this budget. Click "Add Product Allocation" to start!</p>
-                        )}
-                    </section>
+                        {/* Add Product Allocation Button */}
+                        <button
+                            onClick={() => {
+                                setShowAddProductModal(true);
+                                setSelectedProduct(null); // Clear any previously selected product
+                                setEditingBudgetItem(null); // Ensure we are in add mode
+                                setSearchTerm(''); // Clear search term
+                                setSearchResults([]); // Clear search results
+                                setAllocatedQuantity('');
+                                setManualAllocatedAmount('');
+                                setBudgetItemNotes('');
+                                setIsManualAllocation(false);
+                            }}
+                            className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold py-2 px-4 rounded-md transition duration-300 ease-in-out shadow-md transform hover:scale-105"
+                        >
+                            Add Product Allocation
+                        </button>
+                    </div>
+                </h3>
+
+                {budget?.budgetItems && budget?.budgetItems.length > 0 ? (
+                    isTableView ? (
+                        // Table View
+                        <div className="overflow-x-auto shadow-md rounded-lg border border-gray-200">
+                            <table className="min-w-full divide-y divide-gray-200 text-xs lg:text-base">
+                                <thead className="bg-gray-100">
+                                    <tr>
+                                        <th scope="col" className="lg:px-4 py-2 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Item Name</th>
+                                        <th scope="col" className="lg:px-4 py-2 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Allocated</th>
+                                        <th scope="col" className="lg:px-4 py-2 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Remaining</th>
+                                        <th scope="col" className="lg:px-4 py-2 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Days Left</th>
+                                        <th scope="col" className="lg:px-4 py-2 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="bg-white divide-y divide-gray-100">
+                                    {budget.budgetItems.map(item => (
+                                        <AllocatedItem
+                                            key={item.budgetItemId}
+                                            item={item}
+                                            budgetId={budgetId}
+                                            handleEditProductClick={handleEditProductClick}
+                                            handleDeleteProduct={handleDeleteProduct}
+                                            formatDate={formatDate}
+                                            isTableView={true} // Pass true for table view
+                                        />
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    ) : (
+                        // Card View (Original)
+                        <ul className="space-y-3">
+                            {budget.budgetItems.map(item => (
+                                <AllocatedItem
+                                    key={item.budgetItemId}
+                                    item={item}
+                                    budgetId={budgetId}
+                                    handleEditProductClick={handleEditProductClick}
+                                    handleDeleteProduct={handleDeleteProduct}
+                                    formatDate={formatDate}
+                                    isTableView={false} // Pass false for card view
+                                />
+                            ))}
+                        </ul>
+                    )
+                ) : (
+                    <p className="text-gray-600 text-center py-4">No product allocations in this budget. Click "Add Product Allocation" to start!</p>
+                )}
+            </section>
 
 
                 </div>
@@ -694,7 +724,7 @@ function BudgetDetails() {
                                         >
                                             <div>
                                                 <h4 className="text-md font-bold text-gray-900 mb-1">
-                                                   {idx+1}. {product.item_name}
+                                                    {idx + 1}. {product.item_name}
                                                 </h4>
                                             </div>
                                         </div>

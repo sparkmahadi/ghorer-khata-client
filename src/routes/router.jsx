@@ -15,8 +15,8 @@ import AddTransactionForm from '../pages/Expense/AddTransactionForm';
 import Transaction from '../pages/Expense/Transaction';
 import TransactionList from '../pages/Expense/TransactionList';
 import ConsumptionPlan from '../pages/ConsumptionPlan/ConsumptionPlan';
-import AddConsumptionPlan from '../pages/ConsumptionPlan/AddConsumptionPlan';
 import HomePage from './../pages/HomePage/HomePage';
+import BudgetReports from '../pages/Reports/BudgetReports';
 
 const router = createBrowserRouter([
   {
@@ -37,9 +37,8 @@ const router = createBrowserRouter([
       { path: '/budget/expenses/:budgetId', element: <TransactionList /> },
       { path: '/budget/expenses/:budgetId/add-transaction', element: <AddTransactionForm /> },
       { path: '/budgets/:budgetId', element: <BudgetDetails /> },
-      { path: '/consumption-plans', element: <ConsumptionPlan /> },
-      { path: '/consumption-plans/add-plan', element: <AddConsumptionPlan /> },
-      //   { path: 'about', element: <About /> },
+      { path: '/reports', element: <BudgetReports /> },
+      { path: '/consumptions', element: <ConsumptionPlan /> },
     ],
     // errorElement: <ErrorPage />,
   },

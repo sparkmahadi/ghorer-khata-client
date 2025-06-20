@@ -21,8 +21,8 @@ const FinancialSummary = ({budget}) => {
 
     return (
         <section className="mb-8 p-6 bg-blue-100 rounded-xl shadow-lg border border-blue-200">
-            <h3 className="text-2xl font-bold mb-5 text-blue-800 text-center">Financial Dashboard</h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            <h3 className="xl:text-2xl font-semibold mb-2 xl:mb-5 text-blue-800 text-center">Financial Dashboard</h3>
+            <div className="grid grid-cols-3 lg:grid-cols-3 gap-2 lg:gap-6">
                 <FloatingFigure
                     label="Overall Budget"
                     value={overallBudgetAmount}

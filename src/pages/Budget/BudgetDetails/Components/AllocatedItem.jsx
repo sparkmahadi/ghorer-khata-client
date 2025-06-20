@@ -1,24 +1,30 @@
-import React from 'react';
+// components/AllocatedItem.jsx
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router';
+import BudgetItemModal from './BudgetItemModal';
+import BudgetItemDetailContent from './BudgetItemDetailContent';
 
-const AllocatedItem = ({ item, budgetId, handleEditProductClick, handleDeleteProduct, formatDate }) => {
+const AllocatedItem = ({ item, budgetId, handleEditProductClick, handleDeleteProduct, formatDate, isTableView }) => {
     const navigate = useNavigate();
+    const [showDetailModal, setShowDetailModal] = useState(false); // State to control modal visibility
 
-    const safeFormatDate = formatDate || ((date) =>
-        date ? new Date(date).toLocaleDateString() : 'N/A'
-    );
-
+    // --- Start Calculation Logic (Remains the same) ---
     let dynamicBalance = null;
     let daysLeft = null;
     let showLowStockWarning = false;
+    let consumptionProgressPercentage = 0;
+    let balancePercentage = 0;
+
+    let totalDays = 0;
+    let passed = 0;
 
     if (item.consumption_plan && item.allocated_quantity) {
         const today = new Date();
         const start = new Date(item.consumption_plan.startDate);
         const end = new Date(item.consumption_plan.endDate);
 
-        const totalDays = Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1;
-        const passed = Math.max(0, Math.min(Math.ceil((today - start) / (1000 * 60 * 60 * 24)) + 1, totalDays));
+        totalDays = Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1;
+        passed = Math.max(0, Math.min(Math.ceil((today - start) / (1000 * 60 * 60 * 24)) + 1, totalDays));
 
         const dailyQty = item.consumption_plan.daily_quantity || 1;
         const consumed = dailyQty * passed;
@@ -37,87 +43,200 @@ const AllocatedItem = ({ item, budgetId, handleEditProductClick, handleDeletePro
             price,
             basedOn: passed
         };
+
+        if (totalDays > 0) {
+            consumptionProgressPercentage = Math.min(100, (passed / totalDays) * 100);
+        } else {
+            consumptionProgressPercentage = 0;
+        }
+
+        if (item.allocated_amount && item.allocated_amount > 0) {
+            balancePercentage = Math.min(100, (remainingAmt / item.allocated_amount) * 100);
+        } else {
+            balancePercentage = 0;
+        }
+    }
+    // --- End Calculation Logic ---
+
+    // Function to open the detail modal
+    const openDetailModal = () => setShowDetailModal(true);
+    // Function to close the detail modal
+    const closeDetailModal = () => setShowDetailModal(false);
+
+    if (isTableView) {
+        return (
+            <>
+                <tr
+                    key={item.budgetItemId}
+                    className="hover:bg-gray-50 transition duration-150 ease-in-out text-xs lg:text-base"
+                >
+                    <td className="px-1 lg:px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{item.item_name}</td>
+                    <td className="px-1 lg:px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                        <span className="font-semibold text-green-700">${(item.allocated_amount || 0).toFixed(2)}</span>
+                    </td>
+                    <td className="px-1 lg:px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                        {dynamicBalance ? (
+                            <span className={showLowStockWarning ? "font-semibold text-red-700" : "font-semibold text-indigo-700"}>
+                                ${dynamicBalance.amount} ({dynamicBalance.quantity} {item.unit || 'units'})
+                            </span>
+                        ) : 'N/A'}
+                    </td>
+                    <td className="px-1 lg:px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                        {daysLeft !== null ? (
+                            <span className={showLowStockWarning ? "font-semibold text-red-700" : ""}>
+                                {daysLeft}
+                            </span>
+                        ) : 'N/A'}
+                    </td>
+                    <td className="px-1 lg:px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <div className="flex gap-2 items-center">
+                            {/* New "View Details" button */}
+                            <button
+                                onClick={openDetailModal}
+                                className="text-blue-600 hover:text-blue-900 transition-colors"
+                                title="View Details"
+                                aria-label={`View details for ${item.item_name}`}
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" className="w-5 h-5">
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                                </svg>
+                            </button>
+                            <button
+                                onClick={() => handleEditProductClick(item)}
+                                className="text-yellow-600 hover:text-yellow-900"
+                                title="Edit"
+                                aria-label={`Edit ${item.item_name}`}
+                            >
+                                ✏️
+                            </button>
+                            <button
+                                onClick={() => navigate(`/budget/expenses/${budgetId}/add-transaction`)}
+                                className="text-blue-600 hover:text-blue-900"
+                                title="Add Expense"
+                                aria-label={`Add expense for ${item.item_name}`}
+                            >
+                                ➕
+                            </button>
+                            <button
+                                onClick={() => handleDeleteProduct(item.budgetItemId, item.item_name)}
+                                className="text-red-600 hover:text-red-900"
+                                title="Remove"
+                                aria-label={`Remove ${item.item_name}`}
+                            >
+                                🗑️
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                {showDetailModal && (
+                    <BudgetItemModal isOpen={showDetailModal} onClose={closeDetailModal} title={`${item.item_name} Details`}>
+                        <BudgetItemDetailContent
+                            item={item}
+                            budgetId={budgetId}
+                            handleEditProductClick={handleEditProductClick}
+                            handleDeleteProduct={handleDeleteProduct}
+                            formatDate={formatDate}
+                            onCloseModal={closeDetailModal} // Pass close function to content for actions
+                        />
+                    </BudgetItemModal>
+                )}
+            </>
+        );
     }
 
     return (
-        <li key={item.budgetItemId} className="bg-white p-4 rounded-lg shadow border border-gray-200 transition-transform hover:scale-[1.01] duration-200 w-full">
-            <div className="flex flex-col sm:flex-row justify-between gap-4">
-                {/* LEFT: Info Block */}
-                <div className="flex-1">
-                    <h3 className="text-lg font-semibold text-gray-900">{item.item_name}</h3>
-                    <div className="flex flex-wrap gap-2 mt-1 text-sm">
-                        <span className="bg-gray-100 text-gray-700 px-2 py-1 rounded-full">
-                            Category: {item.category_id || 'N/A'}
-                        </span>
-                        {item.subcategory_id && (
-                            <span className="bg-gray-200 text-gray-800 px-2 py-1 rounded-full">
-                                {item.subcategory_id}
-                            </span>
-                        )}
-                    </div>
+        <>
+            <li
+                key={item.budgetItemId}
+                className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 border-b border-gray-200 last:border-b-0 hover:bg-gray-50 transition duration-150 ease-in-out focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-offset-2"
+            >
+                {/* LEFT: Item Info */}
+                <div className="flex-1 min-w-0 pr-4 mb-3 sm:mb-0">
+                    <h4 className="text-lg font-semibold text-gray-800">{item.item_name}</h4>
+                    <p className="text-sm text-gray-600 truncate">{item.category_id} {item.subcategory_id && ` / ${item.subcategory_id}`}</p>
+                    <p className="text-xl font-bold text-green-700 mt-1">${(item.allocated_amount || 0).toFixed(2)}</p>
 
-                    <p className="text-sm text-gray-700 mt-2">
-                        Allocated: <span className="text-green-700 font-bold">${(item.allocated_amount || 0).toFixed(2)}</span>
-                        {item.allocated_quantity && ` (${item.allocated_quantity} ${item.unit || ''} @ $${(item.price_per_unit || 0).toFixed(2)}/${item.unit || ''})`}
-                    </p>
-
-                    {item.notes && (
-                        <p className="text-xs text-gray-500 italic mt-1">Notes: {item.notes}</p>
-                    )}
-
-                    {/* Consumption Plan */}
-                    {item.consumption_plan && (
-                        <div className="mt-3 bg-blue-50 border border-blue-200 rounded p-2 text-xs text-blue-900">
-                            <p className="font-semibold">Consumption Plan</p>
-                            <p>Daily Qty: {item.consumption_plan.daily_quantity} {item.consumption_plan.unit}</p>
-                            <p>From: {safeFormatDate(item.consumption_plan.startDate)}</p>
-                            <p>To: {safeFormatDate(item.consumption_plan.endDate)}</p>
-                        </div>
-                    )}
-
-                    {/* Dynamic Balance */}
+                    {/* Dynamic Balance Info for Card View */}
                     {item.balance && dynamicBalance && (
-                        <div className="mt-3 bg-indigo-50 border border-indigo-200 rounded p-2 text-xs text-indigo-900">
-                            <p className="font-semibold">Estimated Balance</p>
-                            <p>Remaining Qty: <span className="font-bold">{dynamicBalance.quantity} {item.unit || 'units'}</span></p>
-                            <p>Amount Left: <span className="font-bold text-indigo-700">${dynamicBalance.amount}</span></p>
-                            <p>Days Passed: {dynamicBalance.basedOn}</p>
+                        <div className="mt-2 text-sm text-gray-700">
+                            <p className={showLowStockWarning ? "text-red-600 font-semibold" : ""}>
+                                Remaining: <span className="font-bold">${dynamicBalance.amount}</span> ({dynamicBalance.quantity} {item.unit || 'units'})
+                                {showLowStockWarning && <span className="ml-2 font-bold animate-pulse">⚠️ Low stock!</span>}
+                            </p>
                             {daysLeft !== null && (
-                                <p>Estimated Days Left: <span className="font-bold">{daysLeft} day(s)</span></p>
-                            )}
-                            {showLowStockWarning && (
-                                <p className="text-red-600 font-semibold mt-1">
-                                    ⚠️ Low stock! Only {daysLeft} day(s) remaining.
+                                <p className={showLowStockWarning ? "text-red-600 font-semibold" : ""}>
+                                    Est. Days Left: <span className="font-bold">{daysLeft}</span>
                                 </p>
+                            )}
+                            {item.allocated_amount > 0 && (
+                                <div className="w-full bg-gray-200 rounded-full h-2 mt-1">
+                                    <div
+                                        className={`h-2 rounded-full ${balancePercentage < 20 ? 'bg-red-500' : balancePercentage < 50 ? 'bg-yellow-500' : 'bg-green-500'}`}
+                                        style={{ width: `${balancePercentage}%` }}
+                                        title={`Balance Remaining: ${balancePercentage.toFixed(0)}%`}
+                                    ></div>
+                                </div>
                             )}
                         </div>
                     )}
                 </div>
 
                 {/* RIGHT: Actions */}
-                <div className="flex flex-col gap-2 sm:items-end">
+                <div className="flex flex-row sm:flex-col gap-2 ml-0 sm:ml-4 w-full sm:w-auto justify-end sm:justify-start">
+                    {/* New "View Details" button */}
+                    <button
+                        onClick={openDetailModal}
+                        className="bg-gray-200 hover:bg-gray-300 text-gray-700 text-sm font-semibold py-2 px-3 rounded-md transition-colors flex items-center justify-center gap-1"
+                        title="View Details"
+                        aria-label={`View details for ${item.item_name}`}
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" className="w-4 h-4">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                        </svg>
+                        Details
+                    </button>
                     <button
                         onClick={() => handleEditProductClick(item)}
-                        className="bg-yellow-500 hover:bg-yellow-600 text-white text-xs py-2 px-4 rounded shadow transition-transform transform hover:scale-105"
+                        className="bg-yellow-500 hover:bg-yellow-600 text-white text-sm font-semibold py-2 px-3 rounded-md transition-colors flex items-center justify-center gap-1"
+                        title="Edit"
+                        aria-label={`Edit ${item.item_name}`}
                     >
-                        ✏️ Edit
+                        ✏️ <span className="hidden sm:inline">Edit</span>
                     </button>
                     <button
                         onClick={() => navigate(`/budget/expenses/${budgetId}/add-transaction`)}
-                        className="bg-blue-500 hover:bg-blue-600 text-white text-xs py-2 px-4 rounded shadow transition-transform transform hover:scale-105"
+                        className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold py-2 px-3 rounded-md transition-colors flex items-center justify-center gap-1"
+                        title="Add Expense"
+                        aria-label={`Add expense for ${item.item_name}`}
                     >
-                        ➕ Add Expense
+                        ➕ <span className="hidden sm:inline">Expense</span>
                     </button>
                     <button
                         onClick={() => handleDeleteProduct(item.budgetItemId, item.item_name)}
-                        className="bg-red-500 hover:bg-red-600 text-white text-xs py-2 px-4 rounded shadow transition-transform transform hover:scale-105"
+                        className="bg-red-600 hover:bg-red-700 text-white text-sm font-semibold py-2 px-3 rounded-md transition-colors flex items-center justify-center gap-1"
+                        title="Remove"
+                        aria-label={`Remove ${item.item_name}`}
                     >
-                        🗑️ Remove
+                        🗑️ <span className="hidden sm:inline">Remove</span>
                     </button>
                 </div>
-            </div>
-        </li>
+            </li>
+            {showDetailModal && (
+                <BudgetItemModal isOpen={showDetailModal} onClose={closeDetailModal} title={`${item.item_name} Details`}>
+                    <BudgetItemDetailContent
+                        item={item}
+                        budgetId={budgetId}
+                        handleEditProductClick={handleEditProductClick}
+                        handleDeleteProduct={handleDeleteProduct}
+                        formatDate={formatDate}
+                        onCloseModal={closeDetailModal} // Pass close function to content for actions
+                    />
+                </BudgetItemModal>
+            )}
+        </>
     );
 };
 
-export default AllocatedItem;
+export default AllocatedItem;   
