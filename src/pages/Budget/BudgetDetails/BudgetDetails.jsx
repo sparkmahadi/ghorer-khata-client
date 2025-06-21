@@ -10,19 +10,8 @@ import AllocatedItem from './Components/AllocatedItem';
 import BudgetSideBarInfo from './Components/BudgetSideBarInfo';
 import { addBudgetItem, deleteBudget, deleteBudgetItem, updateBudgetItem } from '../../../api/budgetService';
 import { handleApiResponse } from '../../../lib/handleApiResponse';
-
-// New API function to search master products (if not already existing)
-const searchMasterProducts = async (searchTerm) => {
-    try {
-        // This endpoint needs to exist on your backend to search master products
-        const response = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/products/search?q=${searchTerm}`);
-        console.log(response);
-        return handleApiResponse(response);
-    } catch (error) {
-        console.error('Error searching master products:', error.response?.data?.message || error.message);
-        throw new Error(error.response?.data?.message || 'Failed to search products');
-    }
-};
+import { searchMasterProducts } from '../../../api/productService';
+import { formatDate } from '../../../lib/utilityFunctions';
 
 function BudgetDetails() {
     const { budgetId } = useParams();
@@ -60,7 +49,12 @@ function BudgetDetails() {
         setIsTableView(prev => !prev);
     };
 
-
+    const filteredProducts = products.filter(
+        (product) =>
+            product.item_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            product.category?.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            product.subcategory?.name.toLowerCase().includes(searchTerm.toLowerCase())
+    );
 
     // --- Data Fetching ---
     const fetchBudgetById = async (id) => {
@@ -133,25 +127,6 @@ function BudgetDetails() {
         };
     }, [searchTerm, showAddProductModal, budget, editingBudgetItem]); // Re-run effect when searchTerm, modal visibility, or budget changes
 
-    // Helper function to format date strings
-    const formatDate = (dateString) => {
-        if (!dateString) return 'N/A';
-        try {
-            const date = new Date(dateString.trim());
-            if (isNaN(date.getTime())) {
-                throw new Error("Invalid Date");
-            }
-            return date.toLocaleDateString(undefined, {
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric'
-            });
-        } catch (e) {
-            console.error("Invalid date string for formatting:", dateString, e);
-            return 'Invalid Date';
-        }
-    };
-
     const handleDeleteBudget = async () => {
         // Replace with custom modal/confirmation dialog
         if (window.confirm('Are you absolutely sure you want to delete this budget and ALL its associated data? This action cannot be undone!')) {
@@ -173,35 +148,23 @@ function BudgetDetails() {
     };
     // --- Product Allocation Handlers ---
 
-    const handleSearchProducts = async (e) => {
-        e.preventDefault();
-        if (!searchTerm.trim()) {
-            setSearchResults([]);
-            return;
-        }
-        setLoading(true);
-        setError(null);
-        try {
-            const results = await searchMasterProducts(searchTerm);
-            setSearchResults(results);
-        } catch (err) {
-            setError(err.message);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const handleSelectProduct = (product) => {
-        console.log(product);
-        setSelectedProduct(product);
-        setSearchTerm(product.item_name); // Display selected product name in search
-        setSearchResults([]); // Clear search results
-        // Reset allocation fields for a new product
-        setAllocatedQuantity('');
-        setManualAllocatedAmount('');
-        setIsManualAllocation(false);
-        setBudgetItemNotes('');
-    };
+    // const handleSearchProducts = async (e) => {
+    //     e.preventDefault();
+    //     if (!searchTerm.trim()) {
+    //         setSearchResults([]);
+    //         return;
+    //     }
+    //     setLoading(true);
+    //     setError(null);
+    //     try {
+    //         const results = await searchMasterProducts(searchTerm);
+    //         setSearchResults(results);
+    //     } catch (err) {
+    //         setError(err.message);
+    //     } finally {
+    //         setLoading(false);
+    //     }
+    // };
 
     const handleAddProductSubmit = async (e, itemData) => {
         e.preventDefault();
@@ -459,7 +422,7 @@ function BudgetDetails() {
                         </>
                     )}
 
-                        <BudgetSideBarInfo budget={budget} formatDate={formatDate} />
+                    <BudgetSideBarInfo budget={budget} formatDate={formatDate} />
 
                 </div>
 
@@ -501,55 +464,72 @@ function BudgetDetails() {
                     </section>
 
                     {/* Product Allocations Section */}
-                      {/* Product Allocations Section */}
-            <section className="mb-8 p-6 bg-gray-50 rounded-xl shadow-sm border border-gray-200">
-                <h3 className="text-xl font-semibold mb-4 text-gray-800 flex justify-between items-center">
-                    Product Allocations
-                    <div className="flex items-center space-x-3"> {/* Use flex to align buttons */}
-                        {/* Toggle Button */}
-                        <button
-                            onClick={toggleView}
-                            className="bg-gray-700 hover:bg-gray-800 text-white text-sm font-semibold py-2 px-4 rounded-md transition duration-300 ease-in-out shadow-md"
-                            aria-pressed={isTableView}
-                        >
-                            Switch to {isTableView ? 'Card View' : 'Table View'}
-                        </button>
+                    {/* Product Allocations Section */}
+                    <section className="mb-8 p-6 bg-gray-50 rounded-xl shadow-sm border border-gray-200">
+                        <h3 className="text-xl font-semibold mb-4 text-gray-800 flex justify-between items-center">
+                            Product Allocations
+                            <div className="flex items-center space-x-3"> {/* Use flex to align buttons */}
+                                {/* Toggle Button */}
+                                <button
+                                    onClick={toggleView}
+                                    className="bg-gray-700 hover:bg-gray-800 text-white text-sm font-semibold py-2 px-4 rounded-md transition duration-300 ease-in-out shadow-md"
+                                    aria-pressed={isTableView}
+                                >
+                                    Switch to {isTableView ? 'Card View' : 'Table View'}
+                                </button>
 
-                        {/* Add Product Allocation Button */}
-                        <button
-                            onClick={() => {
-                                setShowAddProductModal(true);
-                                setSelectedProduct(null); // Clear any previously selected product
-                                setEditingBudgetItem(null); // Ensure we are in add mode
-                                setSearchTerm(''); // Clear search term
-                                setSearchResults([]); // Clear search results
-                                setAllocatedQuantity('');
-                                setManualAllocatedAmount('');
-                                setBudgetItemNotes('');
-                                setIsManualAllocation(false);
-                            }}
-                            className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold py-2 px-4 rounded-md transition duration-300 ease-in-out shadow-md transform hover:scale-105"
-                        >
-                            Add Product Allocation
-                        </button>
-                    </div>
-                </h3>
+                                {/* Add Product Allocation Button */}
+                                <button
+                                    onClick={() => {
+                                        setShowAddProductModal(true);
+                                        setSelectedProduct(null); // Clear any previously selected product
+                                        setEditingBudgetItem(null); // Ensure we are in add mode
+                                        setSearchTerm(''); // Clear search term
+                                        setSearchResults([]); // Clear search results
+                                        setAllocatedQuantity('');
+                                        setManualAllocatedAmount('');
+                                        setBudgetItemNotes('');
+                                        setIsManualAllocation(false);
+                                    }}
+                                    className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold py-2 px-4 rounded-md transition duration-300 ease-in-out shadow-md transform hover:scale-105"
+                                >
+                                    Add Product Allocation
+                                </button>
+                            </div>
+                        </h3>
 
-                {budget?.budgetItems && budget?.budgetItems.length > 0 ? (
-                    isTableView ? (
-                        // Table View
-                        <div className="overflow-x-auto shadow-md rounded-lg border border-gray-200">
-                            <table className="min-w-full divide-y divide-gray-200 text-xs lg:text-base">
-                                <thead className="bg-gray-100">
-                                    <tr>
-                                        <th scope="col" className="lg:px-4 py-2 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Item Name</th>
-                                        <th scope="col" className="lg:px-4 py-2 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Allocated</th>
-                                        <th scope="col" className="lg:px-4 py-2 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Remaining</th>
-                                        <th scope="col" className="lg:px-4 py-2 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Days Left</th>
-                                        <th scope="col" className="lg:px-4 py-2 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="bg-white divide-y divide-gray-100">
+                        {budget?.budgetItems && budget?.budgetItems.length > 0 ? (
+                            isTableView ? (
+                                // Table View
+                                <div className="overflow-x-auto shadow-md rounded-lg border border-gray-200">
+                                    <table className="min-w-full divide-y divide-gray-200 text-xs lg:text-base">
+                                        <thead className="bg-gray-100">
+                                            <tr>
+                                                <th scope="col" className="lg:px-4 py-2 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Item Name</th>
+                                                <th scope="col" className="lg:px-4 py-2 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Allocated</th>
+                                                <th scope="col" className="lg:px-4 py-2 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Remaining</th>
+                                                <th scope="col" className="lg:px-4 py-2 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Days Left</th>
+                                                <th scope="col" className="lg:px-4 py-2 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="bg-white divide-y divide-gray-100">
+                                            {budget.budgetItems.map(item => (
+                                                <AllocatedItem
+                                                    key={item.budgetItemId}
+                                                    item={item}
+                                                    budgetId={budgetId}
+                                                    handleEditProductClick={handleEditProductClick}
+                                                    handleDeleteProduct={handleDeleteProduct}
+                                                    formatDate={formatDate}
+                                                    isTableView={true} // Pass true for table view
+                                                />
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            ) : (
+                                // Card View (Original)
+                                <ul className="space-y-3">
                                     {budget.budgetItems.map(item => (
                                         <AllocatedItem
                                             key={item.budgetItemId}
@@ -558,32 +538,15 @@ function BudgetDetails() {
                                             handleEditProductClick={handleEditProductClick}
                                             handleDeleteProduct={handleDeleteProduct}
                                             formatDate={formatDate}
-                                            isTableView={true} // Pass true for table view
+                                            isTableView={false} // Pass false for card view
                                         />
                                     ))}
-                                </tbody>
-                            </table>
-                        </div>
-                    ) : (
-                        // Card View (Original)
-                        <ul className="space-y-3">
-                            {budget.budgetItems.map(item => (
-                                <AllocatedItem
-                                    key={item.budgetItemId}
-                                    item={item}
-                                    budgetId={budgetId}
-                                    handleEditProductClick={handleEditProductClick}
-                                    handleDeleteProduct={handleDeleteProduct}
-                                    formatDate={formatDate}
-                                    isTableView={false} // Pass false for card view
-                                />
-                            ))}
-                        </ul>
-                    )
-                ) : (
-                    <p className="text-gray-600 text-center py-4">No product allocations in this budget. Click "Add Product Allocation" to start!</p>
-                )}
-            </section>
+                                </ul>
+                            )
+                        ) : (
+                            <p className="text-gray-600 text-center py-4">No product allocations in this budget. Click "Add Product Allocation" to start!</p>
+                        )}
+                    </section>
 
 
                 </div>
@@ -671,13 +634,7 @@ function BudgetDetails() {
                     editingBudgetItem={editingBudgetItem}
                     handleAddProductSubmit={handleAddProductSubmit}
                     handleUpdateProductSubmit={handleUpdateProductSubmit}
-                    searchTerm={searchTerm}
-                    setSearchTerm={setSearchTerm}
-                    handleSearchProducts={handleSearchProducts}
                     loading={loading}
-                    searchResults={searchResults}
-                    handleSelectProduct={handleSelectProduct}
-                    selectedProduct={selectedProduct}
                     isManualAllocation={isManualAllocation}
                     setIsManualAllocation={setIsManualAllocation}
                     manualAllocatedAmount={manualAllocatedAmount}
@@ -687,9 +644,10 @@ function BudgetDetails() {
                     budgetItemNotes={budgetItemNotes}
                     setBudgetItemNotes={setBudgetItemNotes}
                     setShowAddProductModal={setShowAddProductModal}
-                    setSelectedProduct={setSelectedProduct}
-                    setSearchResults={setSearchResults}
                     setEditingBudgetItem={setEditingBudgetItem}
+                    filteredProducts={filteredProducts}
+                    selectedProduct={selectedProduct}
+                    setSelectedProduct={setSelectedProduct}
                 />
             )}
         </>

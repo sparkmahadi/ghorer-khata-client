@@ -3,13 +3,16 @@ import { toast } from 'react-toastify';
 import { useAuth } from "../../../contexts/AuthContext";
 import axios from "axios";
 // Assuming updateBudgetFromConsumption is correctly imported from your api/budgetService
-import { updateBudgetFromConsumption } from "../../../api/budgetService";
+import { addBudgetItem, updateBudgetFromConsumption } from "../../../api/budgetService";
+import BudgetSelectionModal from "../../../components/Modals/BudgetSelectionModal";
+import IncludeProductModal from "../../Budget/BudgetDetails/Components/IncludeProductModal";
+import { useProductsAndCategories } from "../../../contexts/ProductAndCategoryContext";
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 function ViewConPlans({ userId }) {
     const { userInfo } = useAuth();
-
+    const { products } = useProductsAndCategories();
     const [plans, setPlans] = useState([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
@@ -48,6 +51,18 @@ function ViewConPlans({ userId }) {
         itemName: '',
         action: '' // 'add' or 'update'
     });
+
+    // --- NEW STATES FOR PRODUCT ALLOCATIONS ---
+    const [showAddProductModal, setShowAddProductModal] = useState(false); // Controls add product modal visibility
+    const [selectedProduct, setSelectedProduct] = useState(null); // The product selected to add/edit
+
+    const [allocatedQuantity, setAllocatedQuantity] = useState(''); // Quantity for calculation
+    const [manualAllocatedAmount, setManualAllocatedAmount] = useState(''); // Manual fixed amount
+    const [isManualAllocation, setIsManualAllocation] = useState(false); // Toggle between quantity/manual
+    const [budgetItemNotes, setBudgetItemNotes] = useState(''); // Notes for budget item
+
+    const [editingBudgetItem, setEditingBudgetItem] = useState(null); // The budget item being edited
+    const [budgetId, setBudgetId] = useState(null);
 
 
     // Effect for debouncing product ID and item name filters
@@ -271,9 +286,11 @@ function ViewConPlans({ userId }) {
         }
     };
 
+    let planToAssociate;
     // --- MODIFIED handleAddToBudget ---
     const handleAddToBudget = async (planId) => {
-        const planToAssociate = plans.find(p => p._id === planId);
+        planToAssociate = plans.find(p => p._id === planId);
+        console.log("planToAssociate", planToAssociate);
         if (!planToAssociate) {
             toast.error("Consumption plan not found.");
             return;
@@ -328,9 +345,43 @@ function ViewConPlans({ userId }) {
         }
     };
 
+    const handleAddProductSubmit = async (e, itemData) => {
+        e.preventDefault();
+        setLoading(true);
+        setError(null);
+
+        if (!selectedProduct) {
+            setError('Please select a product.');
+            setLoading(false);
+            return;
+        }
+
+        if (budgetItemNotes.trim()) {
+            itemData.notes = budgetItemNotes.trim();
+        }
+
+        try {
+            console.log('itemdata', itemData);
+            await addBudgetItem(budgetId, itemData);
+            setShowAddProductModal(false); // Close modal
+            setSelectedProduct(null); // Clear selected product
+            setAllocatedQuantity('');
+            setManualAllocatedAmount('');
+            setBudgetItemNotes('');
+            setIsManualAllocation(false);
+            console.log('Product added to budget successfully!'); // Replace with toast/modal
+        } catch (err) {
+            setError(err.message);
+            console.error(`Error adding product to budget: ${err.message}`); // Replace with toast/modal
+        } finally {
+            setLoading(false);
+        }
+    };
+
 
     // --- MODIFIED handleSelectBudgetForPlan ---
     const handleSelectBudgetForPlan = async (budgetId) => {
+        setBudgetId(budgetId);
         if (!selectedPlanForBudget) {
             toast.error("No consumption plan selected for budget update.");
             return;
@@ -346,6 +397,24 @@ function ViewConPlans({ userId }) {
         const itemExistsInBudget = budgetChosen.budgetItems.some(
             item => item.product_id === selectedPlanForBudget.product_id
         );
+
+        if (!itemExistsInBudget) {
+            const confirm = window.confirm("The product is not allocated with the selected budget. Do you want to allocate it first?")
+            if (confirm) {
+                console.log(planToAssociate);
+                const selected = products.find(pd => pd.id === selectedPlanForBudget.product_id);
+                if (selected) {
+                    setSelectedProduct(selected);
+                    setShowAddProductModal(true);
+                } else {
+                    toast.error("Product is not found in master products")
+                }
+
+            } else {
+                toast.info("Consumption cannot be linked without product allocation in selected budget")
+                return;
+            }
+        }
 
         const actionType = itemExistsInBudget ? 'update' : 'add';
 
@@ -627,48 +696,14 @@ function ViewConPlans({ userId }) {
 
                 {/* Budget Selection Modal/Dialog */}
                 {showBudgetSelectionModal && (
-                    <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center p-4 z-50">
-                        <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-                            <div className="flex justify-between items-center mb-4 border-b pb-2">
-                                <h3 className="text-xl font-bold text-gray-800">Select a Budget to Link Consumption Plan</h3>
-                                <button
-                                    onClick={() => setShowBudgetSelectionModal(false)}
-                                    className="text-gray-500 hover:text-gray-700 text-2xl font-semibold p-2 rounded-full hover:bg-gray-100"
-                                >
-                                    &times;
-                                </button>
-                            </div>
-
-                            {budgetSelectionLoading && <p className="text-center text-gray-600">Loading budgets...</p>}
-                            {budgetSelectionError && <p className="text-red-600 mb-4">{budgetSelectionError}</p>}
-                            {!budgetSelectionLoading && availableBudgets.length === 0 && (
-                                <p className="text-center text-gray-600">No budgets found. Please create a budget first.</p>
-                            )}
-
-                            {!budgetSelectionLoading && availableBudgets.length > 0 && (
-                                <ul className="space-y-4">
-                                    {availableBudgets.map(budget => (
-                                        <li key={budget._id} className="bg-white p-4 rounded-lg shadow-sm border border-gray-200 flex flex-col md:flex-row justify-between items-start md:items-center">
-                                            <div className="mb-3 md:mb-0">
-                                                <h3 className="text-lg font-bold text-gray-800">{budget.budgetName} ({new Date(budget.period.startDate).toLocaleDateString()} - {new Date(budget.period.endDate).toLocaleDateString()})</h3>
-                                                <p className="text-gray-600 text-sm">Overall Budget: <span className="font-semibold text-green-700">${budget.overallBudgetAmount.toFixed(2)}</span></p>
-                                                <p className="text-gray-600 text-sm">Allocated: <span className="font-semibold text-blue-700">${budget.overallAllocatedAmount.toFixed(2)}</span> | Utilized: <span className="font-semibold text-red-700">${budget.overallUtilizedAmount.toFixed(2)}</span></p>
-                                                <p className="text-gray-600 text-sm">Remaining to Allocate: <span className="font-semibold text-indigo-700">${(budget.overallBudgetAmount - budget.overallAllocatedAmount).toFixed(2)}</span> | Remaining to Utilize: <span className="font-semibold text-orange-700">${(budget.overallAllocatedAmount - budget.overallUtilizedAmount).toFixed(2)}</span></p>
-                                            </div>
-                                            <div className="flex space-x-2 w-full md:w-auto justify-end">
-                                                <button
-                                                    onClick={() => handleSelectBudgetForPlan(budget._id)}
-                                                    className="bg-purple-500 hover:bg-purple-600 text-white font-bold py-2.5 px-4 rounded-md text-sm transition duration-200 ease-in-out shadow-sm"
-                                                >
-                                                    Select
-                                                </button>
-                                            </div>
-                                        </li>
-                                    ))}
-                                </ul>
-                            )}
-                        </div>
-                    </div>
+                    <BudgetSelectionModal
+                        setShowBudgetSelectionModal={setShowBudgetSelectionModal}
+                        budgetSelectionLoading={budgetSelectionLoading}
+                        budgetSelectionError={budgetSelectionError}
+                        availableBudgets={availableBudgets}
+                        handleSelectBudgetForPlan={handleSelectBudgetForPlan}
+                        setBudgetId={setBudgetId}
+                    />
                 )}
 
                 {/* --- Edit Consumption Plan Modal --- */}
@@ -792,7 +827,7 @@ function ViewConPlans({ userId }) {
                     </div>
                 )}
 
-                {/* --- NEW Confirmation Modal --- */}
+                {/* --- NEW Confirmation Modal before linking consumption to a budget --- */}
                 {showConfirmationModal && (
                     <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center p-4 z-50">
                         <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-md">
@@ -836,6 +871,33 @@ function ViewConPlans({ userId }) {
                 )}
 
             </div>
+
+
+
+
+
+            {/* modal for allocations if required */}
+            {showAddProductModal && (
+                <IncludeProductModal
+                    editingBudgetItem={editingBudgetItem}
+                    handleAddProductSubmit={handleAddProductSubmit}
+                    loading={loading}
+                    isManualAllocation={isManualAllocation}
+                    setIsManualAllocation={setIsManualAllocation}
+                    manualAllocatedAmount={manualAllocatedAmount}
+                    setManualAllocatedAmount={setManualAllocatedAmount}
+                    allocatedQuantity={allocatedQuantity}
+                    setAllocatedQuantity={setAllocatedQuantity}
+                    budgetItemNotes={budgetItemNotes}
+                    setBudgetItemNotes={setBudgetItemNotes}
+                    setShowAddProductModal={setShowAddProductModal}
+                    setEditingBudgetItem={setEditingBudgetItem}
+                    selectedProduct={selectedProduct}
+                    setSelectedProduct={setSelectedProduct}
+                />
+            )}
+
+
         </div>
     );
 }

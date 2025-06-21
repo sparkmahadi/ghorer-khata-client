@@ -1,16 +1,11 @@
 import React, { useEffect, useState } from 'react';
+import ProductSelectionModal from './../../../../components/Modals/ProductSelectionModal';
 
 function IncludeProductModal({
     editingBudgetItem,
     handleAddProductSubmit,
     handleUpdateProductSubmit,
-    searchTerm: initialSearchTerm,
-    setSearchTerm: setParentSearchTerm,
-    handleSearchProducts,
     loading,
-    searchResults,
-    handleSelectProduct,
-    selectedProduct,
     isManualAllocation,
     setIsManualAllocation,
     manualAllocatedAmount,
@@ -20,17 +15,23 @@ function IncludeProductModal({
     budgetItemNotes,
     setBudgetItemNotes,
     setShowAddProductModal,
-    setSelectedProduct: setParentSelectedProduct,
-    setSearchResults: setParentSearchResults,
     setEditingBudgetItem,
+    filteredProducts,
+    selectedProduct,
+    setSelectedProduct,
+    setShowConfirmationModal
 }) {
     // --- Internal states for the modal's form fields ---
-    const [currentSearchTerm, setCurrentSearchTerm] = useState(initialSearchTerm);
     const [currentAllocatedQuantity, setCurrentAllocatedQuantity] = useState(allocatedQuantity);
     const [currentPricePerUnit, setCurrentPricePerUnit] = useState(''); // New state for editable price
     const [currentManualAllocatedAmount, setCurrentManualAllocatedAmount] = useState(manualAllocatedAmount);
     const [currentBudgetItemNotes, setCurrentBudgetItemNotes] = useState(budgetItemNotes);
     const [currentIsManualAllocation, setCurrentIsManualAllocation] = useState(isManualAllocation);
+
+    const [searchTerm, setSearchTerm] = useState("");
+    const [isProductModalOpen, setIsProductModalOpen] = useState(false); // State for the product selection modal
+    // const [selectedProduct, setSelectedProduct] = useState(null); // The product selected to add/edit
+    const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
 
     // --- useEffect to synchronize internal states with props ---
     useEffect(() => {
@@ -40,7 +41,7 @@ function IncludeProductModal({
 
         if (editingBudgetItem) {
             // If we are editing an existing budget item
-            setCurrentSearchTerm(editingBudgetItem.item_name || '');
+            // setCurrentSearchTerm(editingBudgetItem.item_name || '');
             setCurrentIsManualAllocation(editingBudgetItem.manual_allocated_amount != null);
             setCurrentManualAllocatedAmount(editingBudgetItem.manual_allocated_amount?.toString() || '');
             setCurrentAllocatedQuantity(editingBudgetItem.allocated_quantity?.toString() || '');
@@ -53,7 +54,7 @@ function IncludeProductModal({
             setCurrentBudgetItemNotes(editingBudgetItem.notes || '');
         } else if (selectedProduct) {
             // If a new product is selected from the search results
-            setCurrentSearchTerm(selectedProduct.item_name || '');
+            // setCurrentSearchTerm(selectedProduct.item_name || '');
             setCurrentAllocatedQuantity('');
             // Pre-fill price per unit with selected product's base price
             setCurrentPricePerUnit(selectedProduct.price?.toString() || '');
@@ -62,7 +63,7 @@ function IncludeProductModal({
             setCurrentBudgetItemNotes('');
         } else {
             // If the modal is opened freshly for adding, without a selected product initially
-            setCurrentSearchTerm('');
+            // setCurrentSearchTerm('');
             setCurrentAllocatedQuantity('');
             setCurrentPricePerUnit(''); // Clear price when no product
             setCurrentManualAllocatedAmount('');
@@ -70,6 +71,17 @@ function IncludeProductModal({
             setCurrentBudgetItemNotes('');
         }
     }, [editingBudgetItem, selectedProduct]); // Dependencies: re-run when these props change
+
+    const handleSelectProduct = (product) => {
+        console.log(product);
+        setSelectedProduct(product);
+        // Reset allocation fields for a new product
+        setAllocatedQuantity('');
+        setManualAllocatedAmount('');
+        setIsManualAllocation(false);
+        setBudgetItemNotes('');
+        setIsProductModalOpen(false);
+    };
 
     // --- Handlers for internal state changes ---
     const handleSubmit = async (e) => {
@@ -122,6 +134,9 @@ function IncludeProductModal({
                 await handleAddProductSubmit(e, itemData);
             }
             handleClose();
+            if(setShowConfirmationModal){
+                setShowConfirmationModal(true);
+            }
         } catch (error) {
             console.error("Submission error:", error);
             alert(`Failed to save allocation: ${error.message || 'An unknown error occurred'}`);
@@ -131,9 +146,7 @@ function IncludeProductModal({
     const handleClose = () => {
         setShowAddProductModal(false);
         setEditingBudgetItem(null);
-        setParentSelectedProduct(null);
-        setParentSearchTerm('');
-        setParentSearchResults([]);
+        setSelectedProduct(null);
         // Reset the prop states in parent
         setAllocatedQuantity('');
         setManualAllocatedAmount('');
@@ -141,7 +154,6 @@ function IncludeProductModal({
         setIsManualAllocation(false);
 
         // Also reset internal modal states for next open
-        setCurrentSearchTerm('');
         setCurrentAllocatedQuantity('');
         setCurrentPricePerUnit(''); // Reset the new price field
         setCurrentManualAllocatedAmount('');
@@ -159,50 +171,14 @@ function IncludeProductModal({
                     {editingBudgetItem ? 'Edit Product Allocation' : 'Add Product Allocation'}
                 </h3>
                 {loading && <p className="text-blue-600 mb-3">Processing...</p>}
-
+                <button
+                    type="button"
+                    onClick={() => setIsProductModalOpen(true)}
+                    className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors text-sm"
+                >
+                    Select Product
+                </button>
                 <form onSubmit={handleSubmit}>
-                    {/* Product Search and Selection */}
-                    {!editingBudgetItem && (
-                        <div className="mb-4">
-                            <label htmlFor="productSearch" className="block text-sm font-medium text-gray-700 mb-1">
-                                Search Products
-                            </label>
-                            <input
-                                type="text"
-                                id="productSearch"
-                                className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                                value={currentSearchTerm}
-                                onChange={(e) => {
-                                    setCurrentSearchTerm(e.target.value);
-                                    if (e.target.value.trim().length > 0 && !selectedProduct) {
-                                        setParentSearchTerm(e.target.value);
-                                    } else if (e.target.value.trim().length === 0) {
-                                        setParentSearchTerm('');
-                                        setParentSearchResults([]);
-                                    }
-                                }}
-                                placeholder="Start typing to search products..."
-                                disabled={loading}
-                            />
-                            {searchResults.length > 0 && currentSearchTerm.length > 0 && !selectedProduct && (
-                                <ul className="mt-2 border border-gray-200 rounded-md max-h-48 overflow-y-auto bg-white shadow-lg">
-                                    {searchResults.map((product) => (
-                                        <li
-                                            key={product.id}
-                                            className="p-2 cursor-pointer hover:bg-gray-100 flex justify-between items-center"
-                                            onClick={() => {
-                                                handleSelectProduct(product);
-                                            }}
-                                        >
-                                            <span>{product.item_name}</span>
-                                            <span className="text-sm text-gray-500">${product.price_per_unit?.toFixed(2)} / {product.unit}</span>
-                                        </li>
-                                    ))}
-                                </ul>
-                            )}
-                        </div>
-                    )}
-
                     {/* Display selected product details (shows base price as reference) */}
                     {console.log(selectedProduct)}
                     {selectedProduct && (
@@ -327,6 +303,18 @@ function IncludeProductModal({
                     </div>
                 </form>
             </div>
+
+
+            {isProductModalOpen && (
+                <ProductSelectionModal
+                    setIsProductModalOpen={setIsProductModalOpen}
+                    searchTerm={searchTerm}
+                    setSearchTerm={setSearchTerm}
+                    filteredProducts={filteredProducts}
+                    selectedProduct={selectedProduct}
+                    handleSelectProduct={handleSelectProduct}
+                />
+            )}
         </div>
     );
 }
