@@ -4,60 +4,12 @@ import { useParams, useNavigate } from 'react-router';
 import IncludeProductModal from './Components/IncludeProductModal';
 import BasicBudgetForm from './Components/BasicBudgetForm';
 import FinancialSummary from './Components/FinancialSummary';
-import BasicBudgetInfo from './Components/BasicBudgetInfo';
-import AddProductForm from '../../Products/AddProductForm';
 import { useProductsAndCategories } from '../../../contexts/ProductAndCategoryContext';
 import { toast } from 'react-toastify';
 import AllocatedItem from './Components/AllocatedItem';
 import BudgetSideBarInfo from './Components/BudgetSideBarInfo';
-
-const handleApiResponse = (response) => {
-    if (response.data.success) {
-        return response.data.data;
-    } else {
-        throw new Error(response.data.message || 'An unknown error occurred');
-    }
-};
-
-const deleteBudget = async (id) => {
-    try {
-        const response = await axios.delete(`${import.meta.env.VITE_API_BASE_URL}/api/budgets/${id}`);
-        return handleApiResponse(response);
-    } catch (error) {
-        console.error('Error in deleteBudget:', error.response?.data?.message || error.message);
-        throw new Error(error.response?.data?.message || 'Failed to delete budget');
-    }
-};
-
-const addBudgetItem = async (budgetId, itemData) => {
-    try {
-        const response = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/budgets/${budgetId}/items`, itemData);
-        return handleApiResponse(response);
-    } catch (error) {
-        console.error('Error in addBudgetItem:', error.response?.data?.message || error.message);
-        throw new Error(error.response?.data?.message || 'Failed to add budget item');
-    }
-};
-
-const updateBudgetItem = async (budgetId, budgetItemId, itemData) => {
-    try {
-        const response = await axios.put(`${import.meta.env.VITE_API_BASE_URL}/api/budgets/${budgetId}/items/${budgetItemId}`, itemData);
-        return handleApiResponse(response);
-    } catch (error) {
-        console.error('Error in updateBudgetItem:', error.response?.data?.message || error.message);
-        throw new Error(error.response?.data?.message || 'Failed to update budget item');
-    }
-};
-
-const deleteBudgetItem = async (budgetId, budgetItemId) => {
-    try {
-        const response = await axios.delete(`${import.meta.env.VITE_API_BASE_URL}/api/budgets/${budgetId}/items/${budgetItemId}`);
-        return handleApiResponse(response);
-    } catch (error) {
-        console.error('Error in deleteBudgetItem:', error.response?.data?.message || error.message);
-        throw new Error(error.response?.data?.message || 'Failed to delete budget item');
-    }
-};
+import { addBudgetItem, deleteBudget, deleteBudgetItem, updateBudgetItem } from '../../../api/budgetService';
+import { handleApiResponse } from '../../../lib/handleApiResponse';
 
 // New API function to search master products (if not already existing)
 const searchMasterProducts = async (searchTerm) => {
@@ -71,23 +23,6 @@ const searchMasterProducts = async (searchTerm) => {
         throw new Error(error.response?.data?.message || 'Failed to search products');
     }
 };
-
-const getBudgetDayInfo = (startDate, endDate) => {
-    const today = new Date();
-    const start = new Date(startDate);
-    const end = new Date(endDate);
-
-    const totalDays = Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1;
-    const currentDay = Math.ceil((today - start) / (1000 * 60 * 60 * 24)) + 1;
-    const remainingDays = totalDays - currentDay;
-
-    return {
-        currentDay: currentDay < 1 ? 0 : currentDay,
-        remainingDays: remainingDays < 0 ? 0 : remainingDays,
-        totalDays,
-    };
-};
-
 
 function BudgetDetails() {
     const { budgetId } = useParams();
@@ -118,7 +53,6 @@ function BudgetDetails() {
 
     const [editingBudgetItem, setEditingBudgetItem] = useState(null); // The budget item being edited
 
-    const [apiInProgress, setApiInProgress] = useState(false);
     const [isTableView, setIsTableView] = useState(true);
 
     // Toggle function for the view mode
@@ -453,12 +387,6 @@ function BudgetDetails() {
         }
     }
 
-    // Filter subcategories based on selected category for forms
-    const getFilteredSubcategories = (categoryId) => {
-        const selectedCategory = categories.find(cat => cat.id === categoryId);
-        return selectedCategory ? selectedCategory.subcategories : [];
-    };
-
 
     if (loading && !budget) return <p className="text-center py-4 text-gray-600">Loading budget details...</p>;
     if (loadingProducts) return <p className="text-center py-4 text-gray-600">Loading products and details...</p>;
@@ -531,7 +459,7 @@ function BudgetDetails() {
                         </>
                     )}
 
-                        <BudgetSideBarInfo budget={budget} formatDate={formatDate} getBudgetDayInfo={getBudgetDayInfo} />
+                        <BudgetSideBarInfo budget={budget} formatDate={formatDate} />
 
                 </div>
 

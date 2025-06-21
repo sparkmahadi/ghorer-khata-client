@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { fetchTransactions, deleteTransaction } from '../../api/budgetService';
 import { useNavigate, useParams } from 'react-router';
+import { fetchTransactions, deleteTransaction } from '../../api/transactionService';
 
 function TransactionList() {
     const { budgetId } = useParams();

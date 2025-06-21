@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios'; // Keep if used elsewhere, otherwise can remove if only using budgetService
 import { toast } from 'react-toastify';
 import SelectProductForExpense from './SelectProductForExpense';
 import { useAuth } from '../../contexts/AuthContext';
 import { useParams } from 'react-router';
 // Import both createTransaction and the new updateBudgetFromTransactionAPI
-import { createTransaction, updateBudgetFromTransactionAPI } from '../../api/budgetService';
 import { useProductsAndCategories } from '../../contexts/ProductAndCategoryContext';
 import ConShortForm from './ConShortForm';
+import { createTransaction } from '../../api/transactionService';
+import { updateBudgetFromTransactionAPI } from '../../api/budgetService';
 
 function AddTransactionForm() {
     const { userInfo, loading: Authloading, isAuthenticated } = useAuth();

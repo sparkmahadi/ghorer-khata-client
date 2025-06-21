@@ -1,17 +1,9 @@
 import axios from 'axios';
-import { toast } from 'react-toastify';
+import { handleApiResponse } from '../lib/handleApiResponse';
 
 const API_BASE_URL = `${import.meta.env.VITE_API_BASE_URL}/api`; // Your backend URL
 
 // Helper function to handle common API response structure
-const handleApiResponse = (response) => {
-    if (response.data.success) {
-        return response.data.data;
-    } else {
-        // If backend explicitly sends success: false, throw an error with its message
-        throw new Error(response.data.message || 'An unknown error occurred');
-    }
-};
 
 export const fetchBudgetById = async (id) => {
     try {
@@ -53,44 +45,33 @@ export const deleteBudget = async (id) => {
     }
 };
 
-export const fetchTransactions = async (budgetId) => {
+export const addBudgetItem = async (budgetId, itemData) => {
     try {
-        const response = await axios.get(`${API_BASE_URL}/transactions/${budgetId}`);
+        const response = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/budgets/${budgetId}/items`, itemData);
         return handleApiResponse(response);
     } catch (error) {
-        console.error('Error in fetchTransactions:', error.response?.data?.message || error.message);
-        throw new Error(error.response?.data?.message || 'Failed to fetch transactions');
+        console.error('Error in addBudgetItem:', error.response?.data?.message || error.message);
+        throw new Error(error.response?.data?.message || 'Failed to add budget item');
     }
 };
 
-export const createTransaction = async (transactionData, budgetId) => {
+export const updateBudgetItem = async (budgetId, budgetItemId, itemData) => {
     try {
-        const response = await axios.post(`${API_BASE_URL}/transactions/${budgetId}`, transactionData);
+        const response = await axios.put(`${import.meta.env.VITE_API_BASE_URL}/api/budgets/${budgetId}/items/${budgetItemId}`, itemData);
         return handleApiResponse(response);
     } catch (error) {
-        console.error('Error in createTransaction:', error.response?.data?.message || error.message);
-        toast.error(error.response?.data?.message || error.message);
-        throw new Error(error.response?.data?.message || 'Failed to create transaction');
+        console.error('Error in updateBudgetItem:', error.response?.data?.message || error.message);
+        throw new Error(error.response?.data?.message || 'Failed to update budget item');
     }
 };
 
-export const updateTransaction = async (id, transactionData) => {
+export const deleteBudgetItem = async (budgetId, budgetItemId) => {
     try {
-        const response = await axios.put(`${API_BASE_URL}/transactions/${id}`, transactionData);
+        const response = await axios.delete(`${import.meta.env.VITE_API_BASE_URL}/api/budgets/${budgetId}/items/${budgetItemId}`);
         return handleApiResponse(response);
     } catch (error) {
-        console.error('Error in updateTransaction:', error.response?.data?.message || error.message);
-        throw new Error(error.response?.data?.message || 'Failed to update transaction');
-    }
-};
-
-export const deleteTransaction = async (id) => {
-    try {
-        const response = await axios.delete(`${API_BASE_URL}/transactions/${id}`);
-        return handleApiResponse(response);
-    } catch (error) {
-        console.error('Error in deleteTransaction:', error.response?.data?.message || error.message);
-        throw new Error(error.response?.data?.message || 'Failed to delete transaction');
+        console.error('Error in deleteBudgetItem:', error.response?.data?.message || error.message);
+        throw new Error(error.response?.data?.message || 'Failed to delete budget item');
     }
 };
 
@@ -106,21 +87,40 @@ export const fetchAllCategories = async () => {
 };
 
 export const updateBudgetFromTransactionAPI = async (budgetId, transactionDetails) => {
-  try {
-    const response = await axios.put(`${API_BASE_URL}/budgets/update-budget-from-transaction/${budgetId}`, transactionDetails);
-    return response.data;
-  } catch (error) {
-    console.error('Error updating budget from transaction API:', error.response?.data || error.message);
-    throw error; // Re-throw to be caught by the calling function
-  }
+    try {
+        const response = await axios.put(`${API_BASE_URL}/budgets/update-budget-from-transaction/${budgetId}`, transactionDetails);
+        return response.data;
+    } catch (error) {
+        console.error('Error updating budget from transaction API:', error.response?.data || error.message);
+        throw error; // Re-throw to be caught by the calling function
+    }
 };
 
 export const updateBudgetFromConsumption = async (budgetId, consumptionDetails) => {
-  try {
-    const response = await axios.put(`${API_BASE_URL}/budgets/update-budget-from-consumption/${budgetId}`, consumptionDetails);
-    return response.data;
-  } catch (error) {
-    console.error('Error updating budget from transaction API:', error.response?.data || error.message);
-    throw error; // Re-throw to be caught by the calling function
-  }
+    try {
+        const response = await axios.put(`${API_BASE_URL}/budgets/update-budget-from-consumption/${budgetId}`, consumptionDetails);
+        return response.data;
+    } catch (error) {
+        console.error('Error updating budget from transaction API:', error.response?.data || error.message);
+        throw error; // Re-throw to be caught by the calling function
+    }
+};
+
+
+
+// calculations
+export const getBudgetDayInfo = (startDate, endDate) => {
+    const today = new Date();
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+
+    const totalDays = Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1;
+    const currentDay = Math.ceil((today - start) / (1000 * 60 * 60 * 24)) + 1;
+    const remainingDays = totalDays - currentDay;
+
+    return {
+        currentDay: currentDay < 1 ? 0 : currentDay,
+        remainingDays: remainingDays < 0 ? 0 : remainingDays,
+        totalDays,
+    };
 };

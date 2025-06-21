@@ -1,10 +1,11 @@
 import React from 'react';
+import { getBudgetDayInfo } from '../../../../api/budgetService';
 
 // Assuming getBudgetDayInfo and formatDate are available in the scope where this component is used
 // or passed as props if they are external utilities.
 // For this example, let's assume they are either imported or passed.
 
-const BudgetSideBarInfo = ({ budget, getBudgetDayInfo, formatDate }) => {
+const BudgetSideBarInfo = ({ budget, formatDate }) => {
 
     const { currentDay, remainingDays, totalDays } = getBudgetDayInfo(budget.period.startDate, budget.period.endDate);
 
