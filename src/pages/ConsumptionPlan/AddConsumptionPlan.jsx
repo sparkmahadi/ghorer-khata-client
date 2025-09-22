@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useAuth } from "../../contexts/AuthContext";
 import { useProductsAndCategories } from "../../contexts/ProductAndCategoryContext";
-import { useNavigate } from "react-router"; // Using react-router as per your clarification
 import { Loader } from "lucide-react";
 import ProductSelectionModal from "../../components/Modals/ProductSelectionModal";
 
@@ -9,7 +8,6 @@ function AddConsumptionPlan() {
     const { userInfo, loading: authLoading } = useAuth();
     const userId = userInfo?._id;
     const { products, loading: productsLoading } = useProductsAndCategories();
-    const navigate = useNavigate();
 
     // Form states
     const [selectedProduct, setSelectedProduct] = useState(null);
@@ -151,7 +149,7 @@ function AddConsumptionPlan() {
                             <label htmlFor="product_select_input" className="block text-sm font-medium text-gray-700 mb-1">
                                 Product to Plan: <span className="text-red-500">*</span>
                             </label>
-                            <div className="flex items-center space-x-2">
+                            <div className="lg:flex items-center space-x-2">
                                 <input
                                     type="text"
                                     id="product_select_input"
@@ -276,7 +274,7 @@ function AddConsumptionPlan() {
                                 ) : (
                                     "Add Plan"
                                 )}
-                            </button>
+                            </button>   
                         </div>
 
                         {message && (

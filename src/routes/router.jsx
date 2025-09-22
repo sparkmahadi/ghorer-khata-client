@@ -17,6 +17,8 @@ import TransactionList from '../pages/Expense/TransactionList';
 import ConsumptionPlan from '../pages/ConsumptionPlan/ConsumptionPlan';
 import HomePage from './../pages/HomePage/HomePage';
 import BudgetReports from '../pages/Reports/BudgetReports';
+import WeekRoutineEditor from '../pages/Routine/WeekRoutineEditor';
+import ExpenseNotes from '../pages/ExpenseNotes/ExpenseNotes';
 
 const router = createBrowserRouter([
   {
@@ -34,11 +36,13 @@ const router = createBrowserRouter([
       { path: '/dashboard/products-list', element: <ProductList /> },
       { path: '/budgets', element: <Budget /> },
       { path: '/expenses', element: <Transaction /> },
+      { path: '/expense-notes', element: <ExpenseNotes /> },
       { path: '/budget/expenses/:budgetId', element: <TransactionList /> },
       { path: '/budget/expenses/:budgetId/add-transaction', element: <AddTransactionForm /> },
       { path: '/budgets/:budgetId', element: <BudgetDetails /> },
       { path: '/reports', element: <BudgetReports /> },
       { path: '/consumptions', element: <ConsumptionPlan /> },
+      { path: '/routine', element: <WeekRoutineEditor /> },
     ],
     // errorElement: <ErrorPage />,
   },

@@ -3,10 +3,24 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router';
 import BudgetItemModal from './BudgetItemModal';
 import BudgetItemDetailContent from './BudgetItemDetailContent';
+import AddTransactionModal from '../../../Expense/AddTransactionModal';
+import { useCallback } from 'react';
+import { toast } from 'react-toastify';
+import ConShortFormModal from './../../../Expense/ConShortFormModal';
 
-const AllocatedItem = ({ item, budgetId, handleEditProductClick, handleDeleteProduct, formatDate, isTableView }) => {
+const AllocatedItem = ({ item, budgetId, handleEditProductClick, handleDeleteProduct, formatDate, isTableView, handleShowTransactionModal}) => {
     const navigate = useNavigate();
+
     const [showDetailModal, setShowDetailModal] = useState(false); // State to control modal visibility
+    const [isConShortFormModalOpen, setIsConShortFormModalOpen] = useState(false);
+    const [selectedProduct, setSelectedProduct] = useState(null);
+
+    const [itemName, setItemName] = useState(item?.item_name || '');
+    const [product_id, setProductId] = useState(item?.product_id || '');
+    const [amount, setAmount] = useState(0);
+    const [price, setPrice] = useState(item?.price_per_unit || 0);
+    const [quantity, setQuantity] = useState(item?.allocated_quantity ? 1 : 0);
+    const [unit, setUnit] = useState(item?.unit || '');
 
     // --- Start Calculation Logic (Remains the same) ---
     let dynamicBalance = null;
@@ -63,6 +77,23 @@ const AllocatedItem = ({ item, budgetId, handleEditProductClick, handleDeletePro
     // Function to close the detail modal
     const closeDetailModal = () => setShowDetailModal(false);
 
+    // Opens the consumption short form modal
+    const openConShortFormModal = useCallback(() => {
+        setSelectedProduct(item);
+        setIsConShortFormModalOpen(true);
+    }, []);
+
+    // Closes the consumption short form modal
+    const handleCloseConShortFormModal = useCallback(() => {
+        setIsConShortFormModalOpen(false);
+    }, []);
+
+    const handleConsumptionPlanSuccess = useCallback((data) => {
+        console.log("Consumption plan added successfully:", data);
+        toast.success("Consumption plan saved!");
+        // ConShortForm will close itself via its onClose prop
+    }, []);
+
     if (isTableView) {
         return (
             <>
@@ -111,12 +142,20 @@ const AllocatedItem = ({ item, budgetId, handleEditProductClick, handleDeletePro
                                 ✏️
                             </button>
                             <button
-                                onClick={() => navigate(`/budget/expenses/${budgetId}/add-transaction`)}
-                                className="text-blue-600 hover:text-blue-900"
+                                onClick={handleShowTransactionModal}
+                                className="bg-blue-600 hover:bg-blue-700 text-white"
                                 title="Add Expense"
                                 aria-label={`Add expense for ${item.item_name}`}
                             >
                                 ➕
+                            </button>
+                            <button
+                                onClick={openConShortFormModal}
+                                className="bg-blue-600 hover:bg-blue-700 text-white"
+                                title="Add Expense"
+                                aria-label={`Add expense for ${item.item_name}`}
+                            >
+                                Add consumption
                             </button>
                             <button
                                 onClick={() => handleDeleteProduct(item.budgetItemId, item.item_name)}
@@ -141,6 +180,19 @@ const AllocatedItem = ({ item, budgetId, handleEditProductClick, handleDeletePro
                         />
                     </BudgetItemModal>
                 )}
+
+                {/* --- Consumption Plan Modal --- */}
+                {isConShortFormModalOpen && selectedProduct && (
+                    <ConShortFormModal
+                        isOpen={isConShortFormModalOpen}
+                        onClose={handleCloseConShortFormModal}
+                        itemName={itemName}
+                        initialProductId={product_id}
+                        initialUnit={unit}
+                        onSuccess={handleConsumptionPlanSuccess}
+                    />
+                )}
+
             </>
         );
     }
@@ -206,12 +258,20 @@ const AllocatedItem = ({ item, budgetId, handleEditProductClick, handleDeletePro
                         ✏️ <span className="hidden sm:inline">Edit</span>
                     </button>
                     <button
-                        onClick={() => navigate(`/budget/expenses/${budgetId}/add-transaction`)}
-                        className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold py-2 px-3 rounded-md transition-colors flex items-center justify-center gap-1"
+                        onClick={handleShowTransactionModal}
+                        className="bg-blue-600 hover:bg-blue-700 text-white"
                         title="Add Expense"
                         aria-label={`Add expense for ${item.item_name}`}
                     >
-                        ➕ <span className="hidden sm:inline">Expense</span>
+                        ➕
+                    </button>
+                    <button
+                        onClick={openConShortFormModal}
+                        className="bg-blue-600 hover:bg-blue-700 text-white"
+                        title="Add Expense"
+                        aria-label={`Add expense for ${item.item_name}`}
+                    >
+                        Add consumption
                     </button>
                     <button
                         onClick={() => handleDeleteProduct(item.budgetItemId, item.item_name)}
@@ -234,6 +294,18 @@ const AllocatedItem = ({ item, budgetId, handleEditProductClick, handleDeletePro
                         onCloseModal={closeDetailModal} // Pass close function to content for actions
                     />
                 </BudgetItemModal>
+            )}
+
+            {/* --- Consumption Plan Modal --- */}
+            {isConShortFormModalOpen && selectedProduct && (
+                <ConShortFormModal
+                    isOpen={isConShortFormModalOpen}
+                    onClose={handleCloseConShortFormModal}
+                    itemName={itemName}
+                    initialProductId={product_id}
+                    initialUnit={unit}
+                    onSuccess={handleConsumptionPlanSuccess}
+                />
             )}
         </>
     );

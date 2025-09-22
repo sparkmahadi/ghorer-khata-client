@@ -19,7 +19,7 @@ function IncludeProductModal({
     filteredProducts,
     selectedProduct,
     setSelectedProduct,
-    setShowConfirmationModal
+    setIsConfirmationModalOpen,
 }) {
     // --- Internal states for the modal's form fields ---
     const [currentAllocatedQuantity, setCurrentAllocatedQuantity] = useState(allocatedQuantity);
@@ -134,8 +134,8 @@ function IncludeProductModal({
                 await handleAddProductSubmit(e, itemData);
             }
             handleClose();
-            if(setShowConfirmationModal){
-                setShowConfirmationModal(true);
+            if(setIsConfirmationModalOpen){
+                setIsConfirmationModalOpen(true);
             }
         } catch (error) {
             console.error("Submission error:", error);
@@ -146,7 +146,6 @@ function IncludeProductModal({
     const handleClose = () => {
         setShowAddProductModal(false);
         setEditingBudgetItem(null);
-        setSelectedProduct(null);
         // Reset the prop states in parent
         setAllocatedQuantity('');
         setManualAllocatedAmount('');

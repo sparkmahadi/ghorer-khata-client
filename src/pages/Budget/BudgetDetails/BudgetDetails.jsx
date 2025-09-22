@@ -1,5 +1,5 @@
 import axios from 'axios';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useParams, useNavigate } from 'react-router';
 import IncludeProductModal from './Components/IncludeProductModal';
 import BasicBudgetForm from './Components/BasicBudgetForm';
@@ -12,6 +12,7 @@ import { addBudgetItem, deleteBudget, deleteBudgetItem, updateBudgetItem } from 
 import { handleApiResponse } from '../../../lib/handleApiResponse';
 import { searchMasterProducts } from '../../../api/productService';
 import { formatDate } from '../../../lib/utilityFunctions';
+import AddTransactionModal from '../../Expense/AddTransactionModal';
 
 function BudgetDetails() {
     const { budgetId } = useParams();
@@ -43,6 +44,10 @@ function BudgetDetails() {
     const [editingBudgetItem, setEditingBudgetItem] = useState(null); // The budget item being edited
 
     const [isTableView, setIsTableView] = useState(true);
+
+    const [allocatedItem, setAllocatedItem] = useState(null);
+
+    const [showAddTransactionModal, setShowAddTransactionModal] = useState(false);
 
     // Toggle function for the view mode
     const toggleView = () => {
@@ -349,6 +354,77 @@ function BudgetDetails() {
             setLoading(false);
         }
     }
+    // Helper function to calculate dynamic balance, days left, and low stock warning for an item
+    const calculateItemFinancials = (item) => {
+        let dynamicBalance = null;
+        let daysLeft = null;
+        let showLowStockWarning = false;
+        let consumptionProgressPercentage = 0;
+        let balancePercentage = 0;
+
+
+        if (item.consumption_plan && item.allocated_quantity) {
+            const today = new Date();
+            const start = new Date(item.consumption_plan.startDate);
+            const end = new Date(item.consumption_plan.endDate);
+
+            const totalDays = Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1;
+            const passed = Math.max(0, Math.min(Math.ceil((today - start) / (1000 * 60 * 60 * 24)) + 1, totalDays));
+
+            const dailyQty = item.consumption_plan.daily_quantity || 1;
+            const consumed = dailyQty * passed;
+            const remainingQty = Math.max(0, item.allocated_quantity - consumed);
+            const roundedQty = Math.round(remainingQty * 100) / 100;
+
+            const price = item.price_per_unit || 0;
+            const remainingAmt = +(roundedQty * price).toFixed(2);
+
+            daysLeft = dailyQty > 0 ? Math.floor(roundedQty / dailyQty) : null;
+            showLowStockWarning = daysLeft !== null && daysLeft <= 3; // Alert for 3 days or less
+
+            dynamicBalance = {
+                quantity: roundedQty,
+                amount: remainingAmt,
+                price,
+                basedOn: passed
+            };
+
+            if (totalDays > 0) {
+                consumptionProgressPercentage = Math.min(100, (passed / totalDays) * 100);
+            } else {
+                consumptionProgressPercentage = 0;
+            }
+
+            if (item.allocated_amount && item.allocated_amount > 0) {
+                balancePercentage = Math.min(100, (remainingAmt / item.allocated_amount) * 100);
+            } else {
+                balancePercentage = 0;
+            }
+        }
+        return { dynamicBalance, daysLeft, showLowStockWarning, consumptionProgressPercentage, balancePercentage };
+    };
+
+
+    // Memoized list of critical alert items
+    const criticalAlertItems = useMemo(() => {
+        if (!budget || !budget.budgetItems) return [];
+        return budget.budgetItems.map(item => {
+            const { dynamicBalance, daysLeft, showLowStockWarning } = calculateItemFinancials(item);
+            return {
+                ...item,
+                dynamicBalance,
+                daysLeft,
+                showLowStockWarning
+            };
+        }).filter(item => item.showLowStockWarning);
+    }, [budget]);
+
+    const handleShowTransactionModal = (item) => {
+        setAllocatedItem(item);
+        const product = products?.find(pd => pd.id === item.product_id);
+        setSelectedProduct(product);
+        setShowAddTransactionModal(true);
+    }
 
 
     if (loading && !budget) return <p className="text-center py-4 text-gray-600">Loading budget details...</p>;
@@ -556,76 +632,28 @@ function BudgetDetails() {
             </div>
 
 
-            {/* all the products */}
-            {/* Product List */}
-            <>
-                {products?.length === 0 ? (
-                    <p className="text-center text-gray-600 p-4">No products found. Add a new one!</p>
+            {/* New Section for Critical Alerts */}
+            <section className="mb-8 p-6 bg-red-50 rounded-xl shadow-sm border border-red-200">
+                <h3 className="text-xl font-semibold mb-4 text-red-800 flex items-center gap-2">
+                    🚨 Critical Stock Alerts ({criticalAlertItems.length})
+                </h3>
+                {criticalAlertItems.length > 0 ? (
+                    <ul className="space-y-3">
+                        {criticalAlertItems.map(item => (
+                            <li key={item.budgetItemId} className="bg-red-100 p-3 rounded-lg shadow-sm border border-red-300">
+                                <p className="text-red-900 font-semibold text-base">{item.item_name}</p>
+                                <p className="text-red-800 text-sm">
+                                    Days Left: <span className="font-bold">{item.daysLeft}</span>
+                                    <span className="ml-2">|</span> Remaining Balance: <span className="font-bold">${(item.dynamicBalance?.amount || 0).toFixed(2)}</span>
+                                    <span className="ml-2 text-red-700">({item.dynamicBalance?.quantity} {item.unit || 'units'})</span>
+                                </p>
+                            </li>
+                        ))}
+                    </ul>
                 ) : (
-                    <div className="p-4">
-                        <h3 className="text-lg font-semibold mb-4 text-gray-800">Select an item to add to your budget:</h3>
-
-                        {/* --- Search Input Field --- */}
-                        <div className="mb-6"> {/* Margin bottom for spacing */}
-                            <input
-                                type="text"
-                                placeholder="Search products by name..."
-                                value={searchTerm} // Bind value to state
-                                onChange={(e) => setSearchTerm(e.target.value)} // Update state on change
-                                className="
-                        w-full p-3 border border-gray-300 rounded-lg shadow-sm
-                        focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent
-                        text-gray-800 placeholder-gray-500
-                    "
-                            />
-                        </div>
-                        {/* --- End Search Input Field --- */}
-
-                        {/* Filter products based on searchTerm */}
-                        {(() => {
-                            const filteredProducts = products.filter(product =>
-                                product.item_name.toLowerCase().includes(searchTerm.toLowerCase())
-                                // You can add more fields to search, e.g.:
-                                // || product.category_id.toLowerCase().includes(searchTerm.toLowerCase())
-                                // || product.subcategory_id.toLowerCase().includes(searchTerm.toLowerCase())
-                            );
-
-                            if (filteredProducts.length === 0 && searchTerm !== '') {
-                                return (
-                                    <p className="text-center text-gray-600 p-4">No matching products found for "{searchTerm}".</p>
-                                );
-                            }
-
-                            return (
-                                // Product Grid/Flex Container
-                                <div className="flex flex-wrap gap-2">
-                                    {filteredProducts.map((product, idx) => (
-                                        <div
-                                            key={product._id}
-                                            onClick={() => {
-                                                setShowAddProductModal(true);
-                                                handleSelectProduct(product);
-                                            }}
-                                            className="
-                                    bg-white rounded-lg shadow-md p-4 cursor-pointer
-                                    hover:bg-blue-50 hover:shadow-lg transition-all duration-200
-                                    border border-gray-200 hover:border-blue-300
-                                    flex flex-col justify-between
-                                "
-                                        >
-                                            <div>
-                                                <h4 className="text-md font-bold text-gray-900 mb-1">
-                                                    {idx + 1}. {product.item_name}
-                                                </h4>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            );
-                        })()}
-                    </div>
+                    <p className="text-green-700 text-center py-2">🎉 No critical stock alerts for now!</p>
                 )}
-            </>
+            </section>
 
 
             {/* Add/Edit Product Allocation Modal */}
@@ -648,6 +676,16 @@ function BudgetDetails() {
                     filteredProducts={filteredProducts}
                     selectedProduct={selectedProduct}
                     setSelectedProduct={setSelectedProduct}
+                />
+            )}
+
+            {showAddTransactionModal && (
+                <AddTransactionModal
+                    isOpen={showAddTransactionModal}
+                    onClose={() => setShowAddTransactionModal(false)}
+                    budgetId={budgetId}
+                    allocatedItem={allocatedItem}
+                    handleShowTransactionModal={handleShowTransactionModal}
                 />
             )}
         </>
