@@ -17,11 +17,14 @@ const Navbar = () => {
     const navItems = [
         { name: 'Dashboard', icon: LayoutDashboard, href: '/dashboard' },
         { name: 'Products', icon: Package, href: '/products' },
-        { name: 'Categories', icon: List, href: '/categories' }, // Changed to List
-        { name: 'Budgets', icon: PiggyBank, href: '/budgets' },
-        { name: 'Expenses', icon: ReceiptText, href: '/expenses' },
+        // { name: 'Categories', icon: List, href: '/categories' }, // Changed to List
+        // { name: 'Budgets', icon: PiggyBank, href: '/budgets' },
+        // { name: 'Expenses', icon: ReceiptText, href: '/expenses' },
         { name: 'Expense Notes', icon: ReceiptText, href: '/expense-notes' },
         { name: 'Consumptions', icon: NotebookPen, href: '/consumptions' }, // Changed to NotebookPen
+        { name: 'ingredients', icon: ClipboardList, href: '/ingredients' }, // Changed to ClipboardList
+        { name: 'meals', icon: ClipboardList, href: '/meals' }, // Changed to ClipboardList
+        { name: 'mealplans', icon: ClipboardList, href: '/mealplans' }, // Changed to ClipboardList
         { name: 'Reports', icon: ClipboardList, href: '/reports' }, // Changed to ClipboardList
     ];
 

@@ -19,6 +19,9 @@ import HomePage from './../pages/HomePage/HomePage';
 import BudgetReports from '../pages/Reports/BudgetReports';
 import WeekRoutineEditor from '../pages/Routine/WeekRoutineEditor';
 import ExpenseNotes from '../pages/ExpenseNotes/ExpenseNotes';
+import Ingredients from '../pages/Ingredients/Ingredients';
+import Meals from '../pages/Meals/Meals';
+import MealPlans from '../pages/MealPlans/MealPlans';
 
 const router = createBrowserRouter([
   {
@@ -43,6 +46,9 @@ const router = createBrowserRouter([
       { path: '/reports', element: <BudgetReports /> },
       { path: '/consumptions', element: <ConsumptionPlan /> },
       { path: '/routine', element: <WeekRoutineEditor /> },
+      { path: '/ingredients', element: <Ingredients /> },
+      { path: '/meals', element: <Meals /> },
+      { path: '/mealplans', element: <MealPlans /> },
     ],
     // errorElement: <ErrorPage />,
   },
