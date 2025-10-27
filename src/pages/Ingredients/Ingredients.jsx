@@ -73,6 +73,7 @@ export default function Ingredients() {
   };
 
   const deleteIngredient = async (id) => {
+    console.log(id)
     if (!window.confirm("Are you sure?")) return;
     try {
       const res = await API.delete(`/ingredients/${id}`);
