@@ -22,6 +22,7 @@ import ExpenseNotes from '../pages/ExpenseNotes/ExpenseNotes';
 import Ingredients from '../pages/Ingredients/Ingredients';
 import Meals from '../pages/Meals/Meals';
 import MealPlans from '../pages/MealPlans/MealPlans';
+import EstimatedConsumption from '../pages/EstimatedConsumption/EstimatedConsumption';
 
 const router = createBrowserRouter([
   {
@@ -49,6 +50,7 @@ const router = createBrowserRouter([
       { path: '/ingredients', element: <Ingredients /> },
       { path: '/meals', element: <Meals /> },
       { path: '/mealplans', element: <MealPlans /> },
+      { path: '/mealplans/:id', element: <EstimatedConsumption /> },
     ],
     // errorElement: <ErrorPage />,
   },

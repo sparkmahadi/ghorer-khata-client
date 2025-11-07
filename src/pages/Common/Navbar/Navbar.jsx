@@ -25,7 +25,7 @@ const Navbar = () => {
         { name: 'ingredients', icon: ClipboardList, href: '/ingredients' }, // Changed to ClipboardList
         { name: 'meals', icon: ClipboardList, href: '/meals' }, // Changed to ClipboardList
         { name: 'mealplans', icon: ClipboardList, href: '/mealplans' }, // Changed to ClipboardList
-        { name: 'Reports', icon: ClipboardList, href: '/reports' }, // Changed to ClipboardList
+        // { name: 'Reports', icon: ClipboardList, href: '/reports' }, // Changed to ClipboardList
     ];
 
     const closeMobileMenu = () => setIsMobileMenuOpen(false);
